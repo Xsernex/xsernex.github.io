@@ -195,8 +195,8 @@
     </div>
 
     <script>
-        // CONFIGURAZIONE SUPABASE (Sostituisci con i tuoi dati reali)
-        const SUPABASE_URL = 'https://uyouarurqcoyfaxozjrb.supabase.co/rest/v1/';
+        // CONFIGURAZIONE SUPABASE CORRETTA
+        const SUPABASE_URL = 'https://uyouarurqcoyfaxozjrb.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_BddM4racaLDFFwVY4rmoFQ_XFg4gv0b';
 
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -244,7 +244,7 @@
                 if (error) {
                     alert('Errore registrazione: ' + error.message);
                 } else {
-                    alert('Registrazione avvenuta! Controlla la mail o effettua l\'accesso.');
+                    alert('Registrazione avvenuta! Controlla la mail per confermare l\'account.');
                 }
             } else {
                 const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
