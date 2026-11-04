@@ -3,190 +3,278 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Xsernex Debug - Portale Abbonati</title>
+    <title>Xsernex Debug - Portale Licenze</title>
+    <!-- SDK di Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root {
-            --bg-color: #0b0f19;
-            --card-bg: #131b2e;
-            --accent-cyan: #00f3ff;
-            --accent-purple: #9d4edd;
-            --text-main: #f8f9fa;
-            --text-muted: #94a3b8;
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            margin: 0;
-            padding: 20px;
+            background-color: #0b0f19;
+            color: #f3f4f6;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
+            padding: 20px;
         }
         .container {
-            width: 100%;
-            max-width: 550px;
-            background: var(--card-bg);
-            border: 1px solid rgba(0, 243, 255, 0.2);
+            background-color: #111827;
+            border: 1px solid #1f2937;
             border-radius: 12px;
             padding: 30px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
         }
-        h1 {
+        .header {
             text-align: center;
-            color: var(--accent-cyan);
-            font-size: 1.8rem;
+            margin-bottom: 25px;
+        }
+        .header h1 {
+            color: #00f2fe;
+            font-size: 24px;
             margin-bottom: 5px;
             letter-spacing: 1px;
         }
-        p.subtitle {
-            text-align: center;
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            margin-bottom: 25px;
+        .header p {
+            color: #9ca3af;
+            font-size: 13px;
         }
-        .card-section {
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+        .card {
+            background-color: #1f2937;
             border-radius: 8px;
             padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #374151;
+        }
+        .card h3 {
+            font-size: 15px;
+            margin-bottom: 10px;
+            color: #e5e7eb;
+        }
+        .card p {
+            font-size: 12px;
+            color: #9ca3af;
             margin-bottom: 15px;
         }
         .btn {
-            display: block;
             width: 100%;
             padding: 12px;
-            background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan));
-            color: #fff;
             border: none;
             border-radius: 6px;
+            font-size: 14px;
             font-weight: bold;
-            font-size: 0.95rem;
             cursor: pointer;
-            text-align: center;
             transition: opacity 0.2s;
-            margin-top: 10px;
         }
-        .btn-alt {
-            background: transparent;
-            border: 1px solid var(--accent-cyan);
-            color: var(--accent-cyan);
+        .btn-google {
+            background: linear-gradient(135deg, #4285F4 0%, #34A853 100%);
+            color: white;
+            margin-bottom: 15px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%);
+            color: white;
         }
         .btn:hover {
             opacity: 0.9;
         }
-        input {
+        .divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin: 15px 0;
+            color: #6b7280;
+            font-size: 12px;
+        }
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid #374151;
+        }
+        .divider::before { margin-right: 10px; }
+        .divider::after { margin-left: 10px; }
+        .form-group {
+            margin-bottom: 12px;
+        }
+        .form-group input {
             width: 100%;
             padding: 10px;
-            margin-top: 6px;
-            margin-bottom: 12px;
-            background: #0b0f19;
-            border: 1px solid #334155;
+            background-color: #111827;
+            border: 1px solid #374151;
             border-radius: 6px;
-            color: #fff;
-            box-sizing: border-box;
+            color: white;
+            font-size: 13px;
         }
-        label {
-            font-size: 0.85rem;
-            color: var(--text-muted);
+        .form-group input:focus {
+            outline: none;
+            border-color: #00c6ff;
         }
-        .hidden {
-            display: none;
-        }
-        .box-info {
-            background: #0b0f19;
-            padding: 12px;
-            border-left: 4px solid var(--accent-cyan);
-            font-family: monospace;
-            font-size: 1.1rem;
+        .toggle-mode {
             text-align: center;
-            letter-spacing: 1px;
-            margin: 15px 0;
-            border-radius: 4px;
+            margin-top: 15px;
+            font-size: 12px;
+            color: #9ca3af;
+        }
+        .toggle-mode a {
+            color: #00c6ff;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        #dashboard-view {
+            display: none;
+            text-align: center;
+        }
+        .user-email {
+            color: #00c6ff;
+            font-weight: bold;
+            margin-bottom: 15px;
+            word-break: break-all;
+        }
+        .btn-logout {
+            background-color: #ef4444;
+            color: white;
+            margin-top: 15px;
         }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>XSERNEX DEBUG</h1>
-        <p class="subtitle">Portale Ufficiale Gestione Licenze</p>
+        <!-- VISTA AUTENTICAZIONE -->
+        <div id="auth-view">
+            <div class="header">
+                <h1>XSERNEX DEBUG</h1>
+                <p>Portale Ufficiale Gestione Licenze</p>
+            </div>
 
-        <!-- STEP 1: Autenticazione Google (Simile al video) -->
-        <div id="step-login" class="card-section">
-            <h3 style="margin-top: 0; color: #fff; font-size: 1.1rem;">1. Accedi con il tuo account</h3>
-            <p style="font-size: 0.85rem; color: var(--text-muted);">Usa un account Google per collegare e salvare in modo sicuro la tua chiave di accesso.</p>
-            <button class="btn" onclick="mostraOpzioniChiave()">Accedi con Google</button>
+            <div class="card">
+                <h3>1. Accesso Rapido</h3>
+                <p>Collega subito il tuo account Google in un click.</p>
+                <button class="btn btn-google" onclick="loginWithGoogle()">Accedi con Google</button>
+                
+                <div class="divider">oppure usa email</div>
+
+                <div id="email-form">
+                    <div class="form-group">
+                        <input type="email" id="email" placeholder="Indirizzo Email (es. iCloud, Outlook...)">
+                    </div>
+                    <div class="form-group">
+                        <input type="password" id="password" placeholder="Password">
+                    </div>
+                    <button class="btn btn-primary" id="submit-btn" onclick="handleEmailAuth()">Accedi</button>
+                </div>
+
+                <div class="toggle-mode">
+                    <span id="toggle-text">Non hai un account?</span> 
+                    <a onclick="toggleAuthMode()" id="toggle-link">Registrati</a>
+                </div>
+            </div>
         </div>
 
-        <!-- STEP 2: Scelta tra chiave esistente o nuova chiave -->
-        <div id="step-choices" class="card-section hidden">
-            <h3 style="margin-top: 0; color: var(--accent-cyan); font-size: 1.1rem;">Seleziona un'opzione</h3>
-            
-            <button class="btn" onclick="mostraFormCollega()">Ho già una chiave, voglio collegarla</button>
-            <button class="btn btn-alt" onclick="richiediNuovaChiave()">Voglio una chiave nuova</button>
+        <!-- VISTA DASHBOARD (Mostrata dopo il login) -->
+        <div id="dashboard-view">
+            <div class="header">
+                <h1>AREA RISERVATA</h1>
+                <p>Stato Licenza Xsernex</p>
+            </div>
+            <div class="card">
+                <p>Benvenuto, utente:</p>
+                <div class="user-email" id="display-email">caricamento...</div>
+                <div style="background-color: #111827; padding: 10px; border-radius: 6px; font-size: 12px; color: #10b981; margin-bottom: 10px;">
+                    ● Licenza Attiva & Sincronizzata
+                </div>
+            </div>
+            <button class="btn btn-logout" onclick="logout()">Disconnetti</button>
         </div>
-
-        <!-- STEP 3A: Form per collegare chiave esistente -->
-        <div id="step-link-form" class="card-section hidden">
-            <h3 style="margin-top: 0; color: #fff; font-size: 1.1rem;">Collega la tua chiave</h3>
-            <label>Chiave di Licenza:</label>
-            <input type="text" id="input-key" placeholder="es. XSRX-XXXX-XXXX">
-            
-            <label>Nome Personaggio / ID Unico:</label>
-            <input type="text" id="input-char" placeholder="es. Red_Parma">
-            
-            <button class="btn" onclick="salvaCollegamento()">Salva e Associa</button>
-        </div>
-
-        <!-- STEP 3B: Schermata Chiave Assegnata -->
-        <div id="step-success" class="card-section hidden">
-            <h3 style="margin-top: 0; color: var(--accent-cyan); font-size: 1.1rem;">La tua Chiave Attiva</h3>
-            <p style="font-size: 0.85rem; color: var(--text-muted);">Tutte le informazioni sono salvate sul tuo profilo.</p>
-            
-            <div class="box-info" id="final-key-display">XSRX-9F2B-4A1C-88E3</div>
-            
-            <p style="font-size: 0.85rem;">Personaggio collegato: <strong id="saved-char">-</strong></p>
-            <button class="btn btn-alt" onclick="location.reload()">Esci / Torna alla home</button>
-        </div>
-
     </div>
 
     <script>
-        function mostraOpzioniChiave() {
-            document.getElementById('step-login').classList.add('hidden');
-            document.getElementById('step-choices').classList.remove('hidden');
+        // CONFIGURAZIONE SUPABASE (Sostituisci con i tuoi dati reali)
+        const SUPABASE_URL = 'https://uyouarurqcoyfaxozjrb.supabase.co/rest/v1/';
+        const SUPABASE_ANON_KEY = 'sb_publishable_BddM4racaLDFFwVY4rmoFQ_XFg4gv0b';
+
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let isSignUp = false;
+
+        function toggleAuthMode() {
+            isSignUp = !isSignUp;
+            const submitBtn = document.getElementById('submit-btn');
+            const toggleText = document.getElementById('toggle-text');
+            const toggleLink = document.getElementById('toggle-link');
+
+            if (isSignUp) {
+                submitBtn.innerText = 'Registrati';
+                toggleText.innerText = 'Hai già un account?';
+                toggleLink.innerText = 'Accedi';
+            } else {
+                submitBtn.innerText = 'Accedi';
+                toggleText.innerText = 'Non hai un account?';
+                toggleLink.innerText = 'Registrati';
+            }
         }
 
-        function mostraFormCollega() {
-            document.getElementById('step-choices').classList.add('hidden');
-            document.getElementById('step-link-form').classList.remove('hidden');
+        async function loginWithGoogle() {
+            const { data, error } = await supabaseClient.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo: window.location.origin
+                }
+            });
+            if (error) alert('Errore login Google: ' + error.message);
         }
 
-        function richiediNuovaChiave() {
-            alert('Controllo disponibilità chiavi nel database...');
-            document.getElementById('step-choices').classList.add('hidden');
-            document.getElementById('saved-char-display'] = "Assegnata automaticamente";
-            document.getElementById('step-success').classList.remove('hidden');
-        }
+        async function handleEmailAuth() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
 
-        function salvaCollegamento() {
-            const chiave = document.getElementById('input-key').value;
-            const personaggio = document.getElementById('input-char').value;
-            
-            if(!chiave || !personaggio) {
-                alert('Compila tutti i campi richiesti.');
+            if (!email || !password) {
+                alert('Inserisci email e password.');
                 return;
             }
-            
-            document.getElementById('saved-char').innerText = personaggio;
-            document.getElementById('final-key-display').innerText = chiave.toUpperCase();
-            
-            document.getElementById('step-link-form').classList.add('hidden');
-            document.getElementById('step-success').classList.remove('hidden');
-            alert('Chiave collegata con successo!');
+
+            if (isSignUp) {
+                const { data, error } = await supabaseClient.auth.signUp({ email, password });
+                if (error) {
+                    alert('Errore registrazione: ' + error.message);
+                } else {
+                    alert('Registrazione avvenuta! Controlla la mail o effettua l\'accesso.');
+                }
+            } else {
+                const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+                if (error) {
+                    alert('Errore di accesso: ' + error.message);
+                } else {
+                    checkUser();
+                }
+            }
         }
+
+        async function checkUser() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session) {
+                document.getElementById('auth-view').style.display = 'none';
+                document.getElementById('dashboard-view').style.display = 'block';
+                document.getElementById('display-email').innerText = session.user.email;
+            } else {
+                document.getElementById('auth-view').style.display = 'block';
+                document.getElementById('dashboard-view').style.display = 'none';
+            }
+        }
+
+        async function logout() {
+            await supabaseClient.auth.signOut();
+            checkUser();
+        }
+
+        // Controlla lo stato all'avvio della pagina
+        checkUser();
     </script>
 </body>
 </html>
