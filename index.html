@@ -21,7 +21,7 @@
     .btn-login:hover { background: #0369a1; }
     .btn-register { background: #16a34a; color: white; }
     .btn-register:hover { background: #15803d; }
-    .alert { padding: 0.75rem; border-radius: 6px; font-size: 0.85rem; margin-bottom: 1rem; display: none; }
+    .alert { padding: 0.75rem; border-radius: 6px; font-size: 0.85rem; margin-bottom: 1rem; display: none; word-break: break-all; }
     .alert-danger { background: #7f1d1d; color: #fca5a5; }
     .alert-success { background: #14532d; color: #86efac; }
     
@@ -38,7 +38,6 @@
 <body>
 
   <div class="card">
-    <!-- SEZIONE AUTH -->
     <div id="auth-section">
       <h1>XSERNEX</h1>
       <p class="subtitle">Portale Ufficiale Gestione Licenze</p>
@@ -60,7 +59,6 @@
       </div>
     </div>
 
-    <!-- SEZIONE DASHBOARD -->
     <div id="dashboard-section" class="dashboard">
       <h1>Area Personale</h1>
       <p class="subtitle" id="user-email-display"></p>
@@ -74,7 +72,13 @@
   <script>
     const SUPABASE_URL = 'https://evdydyoyxbyknlqofctv.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV2ZHlkeW95eGJ5a25scW9mY3R2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyMzg2MjAsImV4cCI6MjA1NjgxNDYyMH0.g7i8_g_1r2Z6tU1JqM5Y7-v2Qx9X3Z8lK4m5N6p7Q8r';
-    const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    
+    let client;
+    try {
+      client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    } catch (err) {
+      console.error("Errore inizializzazione Supabase:", err);
+    }
 
     function showAlert(message, isError = true) {
       const alert = document.getElementById('alert');
@@ -87,7 +91,6 @@
       document.getElementById('alert').style.display = 'none';
     }
 
-    // Gestione Login
     document.getElementById('login-btn').addEventListener('click', async () => {
       hideAlert();
       const email = document.getElementById('email').value.trim();
@@ -98,15 +101,18 @@
         return;
       }
 
-      const { data, error } = await client.auth.signInWithPassword({ email, password });
-      if (error) {
-        showAlert('Credenziali non valide o errore di accesso.');
-      } else {
-        loadDashboard(data.user);
+      try {
+        const { data, error } = await client.auth.signInWithPassword({ email, password });
+        if (error) {
+          showAlert('Errore login: ' + error.message);
+        } else {
+          loadDashboard(data.user);
+        }
+      } catch (err) {
+        showAlert('Errore di rete critico: ' + err.message);
       }
     });
 
-    // Gestione Registrazione
     document.getElementById('register-btn').addEventListener('click', async () => {
       hideAlert();
       const email = document.getElementById('email').value.trim();
@@ -117,11 +123,15 @@
         return;
       }
 
-      const { data, error } = await client.auth.signUp({ email, password });
-      if (error) {
-        showAlert(error.message);
-      } else {
-        showAlert('Registrazione completata! Ora puoi cliccare su Accedi.', false);
+      try {
+        const { data, error } = await client.auth.signUp({ email, password });
+        if (error) {
+          showAlert('Errore registrazione: ' + error.message);
+        } else {
+          showAlert('Registrazione completata! Ora puoi fare il login.', false);
+        }
+      } catch (err) {
+        showAlert('Errore di rete critico: ' + err.message);
       }
     });
 
@@ -130,34 +140,38 @@
       document.getElementById('dashboard-section').style.display = 'block';
       document.getElementById('user-email-display').innerText = user.email;
 
-      const { data: licenses, error } = await client
-        .from('licenses')
-        .select('*')
-        .eq('owner_email', user.email);
+      try {
+        const { data: licenses, error } = await client
+          .from('licenses')
+          .select('*')
+          .eq('owner_email', user.email);
 
-      const container = document.getElementById('license-container');
+        const container = document.getElementById('license-container');
 
-      if (error || !licenses || licenses.length === 0) {
-        container.innerHTML = `
-          <div style="text-align: center; margin: 1.5rem 0;">
-            <span class="status-badge badge-inactive">Nessuna Licenza Attiva</span>
-            <p style="color: #cbd5e1; font-size: 0.9rem; margin-top: 0.5rem;">
-              Non risulta alcuna licenza univoca associata a questa email.
-            </p>
-          </div>
-        `;
-      } else {
-        const lic = licenses[0];
-        container.innerHTML = `
-          <div style="text-align: center;">
-            <span class="status-badge badge-active">Licenza Attiva</span>
-            <p style="color: #94a3b8; font-size: 0.85rem;">La tua chiave personale per Termux:</p>
-            <div class="license-box">${lic.license_key}</div>
-            <p style="color: #cbd5e1; font-size: 0.85rem;">
-              <strong>Scadenza:</strong> ${lic.expires_at ? new Date(lic.expires_at).toLocaleDateString('it-IT') : 'Illimitata'}
-            </p>
-          </div>
-        `;
+        if (error || !licenses || licenses.length === 0) {
+          container.innerHTML = `
+            <div style="text-align: center; margin: 1.5rem 0;">
+              <span class="status-badge badge-inactive">Nessuna Licenza Attiva</span>
+              <p style="color: #cbd5e1; font-size: 0.9rem; margin-top: 0.5rem;">
+                Non risulta alcuna licenza univoca associata a questa email.
+              </p>
+            </div>
+          `;
+        } else {
+          const lic = licenses[0];
+          container.innerHTML = `
+            <div style="text-align: center;">
+              <span class="status-badge badge-active">Licenza Attiva</span>
+              <p style="color: #94a3b8; font-size: 0.85rem;">La tua chiave personale per Termux:</p>
+              <div class="license-box">${lic.license_key}</div>
+              <p style="color: #cbd5e1; font-size: 0.85rem;">
+                <strong>Scadenza:</strong> ${lic.expires_at ? new Date(lic.expires_at).toLocaleDateString('it-IT') : 'Illimitata'}
+              </p>
+            </div>
+          `;
+        }
+      } catch (err) {
+        console.error("Errore caricamento licenza:", err);
       }
     }
 
@@ -171,9 +185,13 @@
     });
 
     (async () => {
-      const { data: { user } } = await client.auth.getUser();
-      if (user) {
-        loadDashboard(user);
+      try {
+        const { data: { user } } = await client.auth.getUser();
+        if (user) {
+          loadDashboard(user);
+        }
+      } catch (e) {
+        console.error(e);
       }
     })();
   </script>
