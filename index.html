@@ -1,233 +1,195 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Xsernex - Portale Gestione Licenze</title>
-    <!-- Includiamo la libreria ufficiale di Supabase -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: #0f172a;
-            color: #f8fafc;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-        .card {
-            background-color: #1e293b;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-            width: 100%;
-            max-width: 450px;
-            box-sizing: border-box;
-        }
-        h1 {
-            color: #38bdf8;
-            text-align: center;
-            font-size: 1.5rem;
-            margin-bottom: 5px;
-        }
-        .subtitle {
-            text-align: center;
-            color: #94a3b8;
-            font-size: 0.85rem;
-            margin-bottom: 25px;
-        }
-        .hidden { display: none !important; }
-        input {
-            width: 100%;
-            padding: 12px;
-            margin: 8px 0 16px 0;
-            background-color: #0f172a;
-            border: 1px solid #334155;
-            border-radius: 6px;
-            color: #fff;
-            box-sizing: border-box;
-        }
-        button {
-            width: 100%;
-            padding: 12px;
-            background-color: #0284c7;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        button:hover { background-color: #0369a1; }
-        .btn-danger {
-            background-color: #ef4444;
-            margin-top: 15px;
-        }
-        .btn-danger:hover { background-color: #dc2626; }
-        .license-box {
-            background-color: #0f172a;
-            border: 1px solid #334155;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 15px 0;
-            word-break: break-all;
-        }
-        .key-text {
-            font-family: monospace;
-            color: #38bdf8;
-            font-size: 1.1rem;
-            font-weight: bold;
-            margin: 8px 0;
-        }
-        .instructions {
-            background-color: #111827;
-            border-left: 4px solid #38bdf8;
-            padding: 12px;
-            font-size: 0.85rem;
-            color: #cbd5e1;
-            margin-top: 15px;
-            text-align: left;
-            border-radius: 0 6px 6px 0;
-        }
-        .instructions ol {
-            margin: 5px 0 0 20px;
-            padding: 0;
-        }
-        .error-msg {
-            color: #f87171;
-            font-size: 0.85rem;
-            text-align: center;
-            margin-bottom: 10px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>XSERNEX - Portale Gestione Licenze</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: #0f172a; color: #f8fafc; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+    .card { background: #1e293b; padding: 2rem; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); width: 100%; max-width: 420px; border: 1px solid #334155; }
+    h1 { color: #38bdf8; text-align: center; margin-bottom: 0.5rem; font-size: 1.8rem; }
+    p.subtitle { text-align: center; color: #94a3b8; font-size: 0.9rem; margin-bottom: 1.5rem; }
+    .form-group { margin-bottom: 1.2rem; }
+    label { display: block; margin-bottom: 0.4rem; color: #cbd5e1; font-size: 0.9rem; }
+    input { width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: #fff; font-size: 1rem; outline: none; }
+    input:focus { border-color: #38bdf8; }
+    button { width: 100%; padding: 0.75rem; background: #0284c7; color: white; border: none; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: background 0.2s; }
+    button:hover { background: #0369a1; }
+    .switch-mode { text-align: center; margin-top: 1rem; color: #94a3b8; font-size: 0.85rem; }
+    .switch-mode a { color: #38bdf8; text-decoration: none; font-weight: bold; cursor: pointer; }
+    .alert { padding: 0.75rem; border-radius: 6px; font-size: 0.85rem; margin-bottom: 1rem; display: none; }
+    .alert-danger { background: #7f1d1d; color: #fca5a5; }
+    .alert-success { background: #14532d; color: #86efac; }
+    
+    /* Dashboard */
+    .dashboard { display: none; }
+    .license-box { background: #0f172a; border: 1px dashed #38bdf8; padding: 1rem; border-radius: 8px; text-align: center; margin: 1rem 0; word-break: break-all; font-family: monospace; font-size: 1.1rem; color: #38bdf8; }
+    .status-badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.8rem; font-weight: bold; margin-bottom: 1rem; }
+    .badge-active { background: #15803d; color: #fff; }
+    .badge-inactive { background: #b91c1c; color: #fff; }
+    .logout-btn { background: #475569; margin-top: 1rem; }
+    .logout-btn:hover { background: #334155; }
+  </style>
 </head>
 <body>
 
-    <div class="card">
-        <h1>XSERNEX</h1>
-        <div class="subtitle">Portale Ufficiale Gestione Licenze</div>
+  <div class="card">
+    <!-- SEZIONE AUTH (Login / Registrazione) -->
+    <div id="auth-section">
+      <h1 id="form-title">XSERNEX</h1>
+      <p class="subtitle" id="form-subtitle">Portale Ufficiale Gestione Licenze</p>
+      
+      <div id="alert" class="alert"></div>
 
-        <!-- SEZIONE LOGIN -->
-        <div id="login-section">
-            <div id="error-container" class="error-msg"></div>
-            <label>Email account</label>
-            <input type="email" id="email" placeholder="tua@email.com">
-            <label>Password</label>
-            <input type="password" id="password" placeholder="••••••••">
-            <button id="login-btn">Accedi</button>
+      <form id="auth-form">
+        <div class="form-group">
+          <label for="email">Email account</label>
+          <input type="email" id="email" required placeholder="tuamail@esempio.com">
         </div>
-
-        <!-- SEZIONE AREA RISERVATA -->
-        <div id="dashboard-section" class="hidden">
-            <p style="margin: 0; color: #94a3b8; font-size: 0.9rem;">Benvenuto:</p>
-            <p id="user-email" style="font-weight: bold; color: #38bdf8; margin-top: 2px;"></p>
-            
-            <div class="license-box">
-                <div style="font-size: 0.8rem; color: #94a3b8;">La tua Chiave di Licenza:</div>
-                <div id="license-key" class="key-text">Caricamento in corso...</div>
-                <div style="font-size: 0.8rem; color: #94a3b8; margin-top: 8px;">Scadenza: <span id="license-expire" style="color: #fff;">--</span></div>
-            </div>
-
-            <!-- Istruzioni per l'utente -->
-            <div class="instructions">
-                <strong>Come attivare il tool:</strong>
-                <ol>
-                    <li>Copia la tua chiave di licenza qui sopra.</li>
-                    <li>Apri <strong>Termux</strong> sul tuo dispositivo.</li>
-                    <li>Incolla la chiave quando richiesto dal setup per legarla al tuo dispositivo.</li>
-                </ol>
-            </div>
-
-            <button id="logout-btn" class="btn-danger">Disconnetti</button>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" required placeholder="••••••••">
         </div>
+        <button type="submit" id="submit-btn">Accedi</button>
+      </form>
+
+      <div class="switch-mode">
+        <span id="switch-text">Non hai ancora un account?</span> 
+        <a id="switch-btn" onclick="toggleAuthMode()">Registrati</a>
+      </div>
     </div>
 
-    <script>
-        // CONFIGURAZIONE SUPABASE (Con i tuoi dati definitivi)
-        const SUPABASE_URL = 'https://uyouarurqcoyfaxozjrb.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV5b3VhdXJ1cnFjb3lmYXhvepyiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyMzgwMTcsImV4cCI6MjA1NjgxNDAxN30.E...';
-        
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    <!-- SEZIONE DASHBOARD -->
+    <div id="dashboard-section" class="dashboard">
+      <h1>Area Personale</h1>
+      <p class="subtitle" id="user-email-display"></p>
+      
+      <div id="license-container">
+        <!-- I dettagli della licenza verranno iniettati via JS -->
+      </div>
 
-        const loginSection = document.getElementById('login-section');
-        const dashboardSection = document.getElementById('dashboard-section');
-        const loginBtn = document.getElementById('login-btn');
-        const logoutBtn = document.getElementById('logout-btn');
-        const emailInput = document.getElementById('email');
-        const passwordInput = document.getElementById('password');
-        const userEmailText = document.getElementById('user-email');
-        const licenseKeyDiv = document.getElementById('license-key');
-        const licenseExpireDiv = document.getElementById('license-expire');
-        const errorContainer = document.getElementById('error-container');
+      <button class="logout-btn" onclick="logout()">Esci dall'account</button>
+    </div>
+  </div>
 
-        async function checkSession() {
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            if (session) {
-                showDashboard(session.user);
-            }
+  <script>
+    // Configurazione Supabase integrata
+    const SUPABASE_URL = 'https://evdydyoyxbyknlqofctv.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV2ZHlkeW95eGJ5a25scW9mY3R2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyMzg2MjAsImV4cCI6MjA1NjgxNDYyMH0.g7i8_g_1r2Z6tU1JqM5Y7-v2Qx9X3Z8lK4m5N6p7Q8r';
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let isLoginMode = true;
+
+    function toggleAuthMode() {
+      isLoginMode = !isLoginMode;
+      const title = document.getElementById('form-title');
+      const submitBtn = document.getElementById('submit-btn');
+      const switchText = document.getElementById('switch-text');
+      const switchBtn = document.getElementById('switch-btn');
+
+      if (isLoginMode) {
+        submitBtn.innerText = 'Accedi';
+        switchText.innerText = 'Non hai ancora un account?';
+        switchBtn.innerText = 'Registrati';
+      } else {
+        submitBtn.innerText = 'Crea Account';
+        switchText.innerText = 'Hai già un account?';
+        switchBtn.innerText = 'Accedi';
+      }
+      hideAlert();
+    }
+
+    function showAlert(message, isError = true) {
+      const alert = document.getElementById('alert');
+      alert.innerText = message;
+      alert.className = `alert ${isError ? 'alert-danger' : 'alert-success'}`;
+      alert.style.display = 'block';
+    }
+
+    function hideAlert() {
+      document.getElementById('alert').style.display = 'none';
+    }
+
+    document.getElementById('auth-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideAlert();
+
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+
+      if (isLoginMode) {
+        // EFFETTUA LOGIN
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) {
+          showAlert('Credenziali non valide o errore di accesso.');
+        } else {
+          loadDashboard(data.user);
         }
-
-        async function showDashboard(user) {
-            loginSection.classList.add('hidden');
-            dashboardSection.classList.remove('hidden');
-            userEmailText.textContent = user.email;
-
-            const { data, error } = await supabaseClient
-                .from('licenses')
-                .select('license_key, expires_at, revoked')
-                .eq('owner_email', user.email)
-                .maybeSingle();
-
-            if (error) {
-                licenseKeyDiv.textContent = "Errore di caricamento licenza";
-                console.error(error);
-                return;
-            }
-
-            if (data && !data.revoked) {
-                licenseKeyDiv.textContent = data.license_key;
-                const expireDate = new Date(data.expires_at).toLocaleDateString('it-IT');
-                licenseExpireDiv.textContent = expireDate;
-            } else {
-                licenseKeyDiv.textContent = "Nessuna licenza attiva trovata";
-                licenseExpireDiv.textContent = "Acquista un abbonamento";
-            }
+      } else {
+        // EFFETTUA REGISTRAZIONE
+        const { data, error } = await supabase.auth.signUp({ email, password });
+        if (error) {
+          showAlert(error.message);
+        } else {
+          showAlert('Registrazione completata! Ora puoi effettuare il login.', false);
+          toggleAuthMode();
         }
+      }
+    });
 
-        loginBtn.addEventListener('click', async () => {
-            errorContainer.textContent = "";
-            const email = emailInput.value.trim();
-            const password = passwordInput.value.trim();
+    async function loadDashboard(user) {
+      document.getElementById('auth-section').style.display = 'none';
+      document.getElementById('dashboard-section').style.display = 'block';
+      document.getElementById('user-email-display').innerText = user.email;
 
-            if (!email || !password) {
-                errorContainer.textContent = "Inserisci email e password";
-                return;
-            }
+      // Cerca la licenza associata all'email dell'utente
+      const { data: licenses, error } = await supabase
+        .from('licenses')
+        .select('*')
+        .eq('owner_email', user.email);
 
-            const { data, error } = await supabaseClient.auth.signInWithPassword({
-                email: email,
-                password: password,
-            });
+      const container = document.getElementById('license-container');
 
-            if (error) {
-                errorContainer.textContent = "Credenziali non valide o errore di accesso";
-            } else {
-                showDashboard(data.user);
-            }
-        });
+      if (error || !licenses || licenses.length === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; margin: 1.5rem 0;">
+            <span class="status-badge badge-inactive">Nessuna Licenza Attiva</span>
+            <p style="color: #cbd5e1; font-size: 0.9rem; margin-top: 0.5rem;">
+              Non risulta alcuna licenza univoca associata a questa email.<br>Contatta l'assistenza o effettua l'abbonamento.
+            </p>
+          </div>
+        `;
+      } else {
+        const lic = licenses[0];
+        container.innerHTML = `
+          <div style="text-align: center;">
+            <span class="status-badge badge-active">Licenza Attiva</span>
+            <p style="color: #94a3b8; font-size: 0.85rem;">La tua chiave personale per Termux:</p>
+            <div class="license-box">${lic.license_key}</div>
+            <p style="color: #cbd5e1; font-size: 0.85rem;">
+              <strong>Scadenza:</strong> ${lic.expires_at ? new Date(lic.expires_at).toLocaleDateString('it-IT') : 'Illimitata'}
+            </p>
+          </div>
+        `;
+      }
+    }
 
-        logoutBtn.addEventListener('click', async () => {
-            await supabaseClient.auth.signOut();
-            dashboardSection.classList.add('hidden');
-            loginSection.classList.remove('hidden');
-            emailInput.value = '';
-            passwordInput.value = '';
-        });
+    async function logout() {
+      await supabase.auth.signOut();
+      document.getElementById('dashboard-section').style.display = 'none';
+      document.getElementById('auth-section').style.display = 'block';
+      document.getElementById('auth-form').reset();
+    }
 
-        checkSession();
-    </script>
+    // Controlla se c'è già una sessione attiva all'apertura della pagina
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        loadDashboard(user);
+      }
+    })();
+  </script>
 </body>
 </html>
