@@ -31,6 +31,9 @@
         #dashboard-view { display: none; text-align: center; }
         .user-email { color: #00c6ff; font-weight: bold; margin-bottom: 15px; word-break: break-all; }
         .btn-logout { background-color: #ef4444; color: white; margin-top: 15px; }
+        .license-status { padding: 10px; border-radius: 6px; font-size: 12px; margin-bottom: 10px; font-weight: bold; }
+        .status-active { background-color: #111827; color: #10b981; border: 1px solid #10b981; }
+        .status-inactive { background-color: #111827; color: #ef4444; border: 1px solid #ef4444; }
     </style>
 </head>
 <body>
@@ -76,8 +79,9 @@
             <div class="card">
                 <p>Benvenuto, utente:</p>
                 <div class="user-email" id="display-email">caricamento...</div>
-                <div style="background-color: #111827; padding: 10px; border-radius: 6px; font-size: 12px; color: #10b981; margin-bottom: 10px;">
-                    ● Licenza Attiva & Sincronizzata
+                
+                <div id="license-box" class="license-status status-inactive">
+                    Verifica licenza in corso...
                 </div>
             </div>
             <button class="btn btn-logout" onclick="logout()">Disconnetti</button>
@@ -149,9 +153,30 @@
                 document.getElementById('auth-view').style.display = 'none';
                 document.getElementById('dashboard-view').style.display = 'block';
                 document.getElementById('display-email').innerText = session.user.email;
+                
+                verifyLicense(session.user.id);
             } else {
                 document.getElementById('auth-view').style.display = 'block';
                 document.getElementById('dashboard-view').style.display = 'none';
+            }
+        }
+
+        async function verifyLicense(userId) {
+            const licenseBox = document.getElementById('license-box');
+            licenseBox.innerText = 'Controllo licenza sul database...';
+
+            const { data, error } = await supabaseClient
+                .from('licenses')
+                .select('*')
+                .eq('user_id', userId)
+                .single();
+
+            if (error || !data) {
+                licenseBox.className = 'license-status status-inactive';
+                licenseBox.innerText = '✖ Nessuna Licenza Associata';
+            } else {
+                licenseBox.className = 'license-status status-active';
+                licenseBox.innerText = `✔ Licenza Trovata (${data.status || 'Attiva'})`;
             }
         }
 
