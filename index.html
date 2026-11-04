@@ -19,6 +19,7 @@
     button:hover { background: #0369a1; }
     .switch-mode { text-align: center; margin-top: 1rem; color: #94a3b8; font-size: 0.85rem; }
     .switch-mode a { color: #38bdf8; text-decoration: none; font-weight: bold; cursor: pointer; }
+    .switch-mode a:hover { text-decoration: underline; }
     .alert { padding: 0.75rem; border-radius: 6px; font-size: 0.85rem; margin-bottom: 1rem; display: none; }
     .alert-danger { background: #7f1d1d; color: #fca5a5; }
     .alert-success { background: #14532d; color: #86efac; }
@@ -57,7 +58,7 @@
 
       <div class="switch-mode">
         <span id="switch-text">Non hai ancora un account?</span> 
-        <a id="switch-btn" onclick="toggleAuthMode()">Registrati</a>
+        <a id="switch-btn" role="button" onclick="toggleAuthMode()">Registrati</a>
       </div>
     </div>
 
@@ -84,7 +85,6 @@
 
     function toggleAuthMode() {
       isLoginMode = !isLoginMode;
-      const title = document.getElementById('form-title');
       const submitBtn = document.getElementById('submit-btn');
       const switchText = document.getElementById('switch-text');
       const switchBtn = document.getElementById('switch-btn');
