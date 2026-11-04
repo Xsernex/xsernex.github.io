@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>XSERNEX - Portale Gestione Licenze</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: #0f172a; color: #f8fafc; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 12px; }
+    .card { background: #1e293b; padding: 1.5rem 1.2rem; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); width: 100%; max-width: 420px; border: 1px solid #334155; }
+    h1 { color: #38bdf8; text-align: center; margin-bottom: 0.5rem; font-size: 1.8rem; }
+    p.subtitle { text-align: center; color: #94a3b8; font-size: 0.9rem; margin-bottom: 1.5rem; }
+    .form-group { margin-bottom: 1.2rem; }
+    label { display: block; margin-bottom: 0.4rem; color: #cbd5e1; font-size: 0.9rem; }
+    input { width: 100%; padding: 0.75rem 0.6rem; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: #fff; font-size: 0.9rem; outline: none; text-overflow: clip; }
+    input:focus { border-color: #38bdf8; }
+    .btn-container { display: flex; gap: 10px; margin-top: 1rem; }
+    button { width: 100%; padding: 0.75rem; border: none; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: background 0.2s; }
+    button:disabled { opacity: 0.6; cursor: wait; }
+    .btn-login { background: #0284c7; color: white; }
+    .btn-login:hover { background: #0369a1; }
+    .btn-register { background: #16a34a; color: white; }
+    .btn-register:hover { background: #15803d; }
+    .alert { padding: 0.75rem; border-radius: 6px; font-size: 0.85rem; margin-bottom: 1rem; display: none; word-break: break-word; }
+    .alert-danger { background: #7f1d1d; color: #fca5a5; }
+    .alert-success { background: #14532d; color: #86efac; }
+
+    .dashboard { display: none; }
+    .license-box { background: #0f172a; border: 1px dashed #38bdf8; padding: 1rem; border-radius: 8px; text-align: center; margin: 1rem 0; word-break: break-all; font-family: monospace; font-size: 1.1rem; color: #38bdf8; }
+    .status-badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.8rem; font-weight: bold; margin-bottom: 1rem; }
+    .badge-active { background: #15803d; color: #fff; }
+    .badge-inactive { background: #b91c1c; color: #fff; }
+    .logout-btn { background: #475569; color: white; margin-top: 1rem; width: 100%; }
+    .logout-btn:hover { background: #334155; }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <div id="auth-section">
+      <h1>XSERNEX</h1>
+      <p class="subtitle">Portale Ufficiale Gestione Licenze</p>
+
+      <div id="alert" class="alert"></div>
+
+      <div class="form-group">
+        <label for="email">Email account</label>
+        <input type="email" id="email" name="email" required placeholder="tuamail@esempio.com"
+               autocomplete="email" autocapitalize="none" autocorrect="off"
+               spellcheck="false" inputmode="email">
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" required placeholder="••••••••" autocomplete="current-password">
+      </div>
+
+      <div class="btn-container">
+        <button type="button" id="login-btn" class="btn-login">Accedi</button>
+        <button type="button" id="register-btn" class="btn-register">Registrati</button>
+      </div>
+    </div>
+
+    <div id="dashboard-section" class="dashboard">
+      <h1>Area Personale</h1>
+      <p class="subtitle" id="user-email-display"></p>
+      <div id="license-container"></div>
+      <button class="logout-btn" id="logout-btn">Esci dall'account</button>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://uyouarurqcoyfaxozjrb.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_BddM4racaLDFFwVY4rmoFQ_XFg4gv0b';
+
+    const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    const $ = (id) => document.getElementById(id);
+    const emailInput = $('email');
+    const passInput = $('password');
+    const loginBtn = $('login-btn');
+    const registerBtn = $('register-btn');
+
+    // ---------- Utilità ----------
+    function pulisciEmail(v) {
+      return (v || '')
+        .normalize('NFKC')
+        .replace(/[\s\u200B-\u200D\uFEFF]/g, '')
+        .toLowerCase();
+    }
+
+    function emailValida(v) {
+      return /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(v);
+    }
+
+    function showAlert(message, isError = true) {
+      const a = $('alert');
+      a.textContent = message;
+      a.className = 'alert ' + (isError ? 'alert-danger' : 'alert-success');
+      a.style.display = 'block';
+    }
+
+    function hideAlert() { $('alert').style.display = 'none'; }
+
+    function setBusy(busy) {
+      loginBtn.disabled = busy;
+      registerBtn.disabled = busy;
+    }
+
+    function traduciErrore(err) {
+      const msg = (err && err.message) || String(err);
+      if (/failed to fetch|networkerror|load failed/i.test(msg))
+        return 'Connessione non riuscita. Controlla la rete (o disattiva adblock/DNS filtranti) e riprova.';
+      if (/invalid login credentials/i.test(msg)) return 'Email o password errate.';
+      if (/email not confirmed/i.test(msg)) return 'Devi prima confermare l\'email: controlla la posta (anche spam).';
+      if (/already registered/i.test(msg)) return 'Questa email è già registrata. Usa "Accedi".';
+      if (/password should be at least/i.test(msg)) return 'Password troppo corta (minimo 6 caratteri).';
+      if (/invalid api key|apikey/i.test(msg)) return 'Chiave Supabase non valida: ricontrolla la anon key.';
+      if (/rate limit/i.test(msg)) return 'Troppi tentativi, riprova tra qualche minuto.';
+      return msg;
+    }
+
+    function leggiCredenziali() {
+      const email = pulisciEmail(emailInput.value);
+      emailInput.value = email;
+      const password = passInput.value;
+      if (!email || !password) { showAlert('Inserisci email e password.'); return null; }
+      if (!emailValida(email)) { showAlert('Email non valida: controlla il dominio (es. .com, non .co).'); return null; }
+      return { email, password };
+    }
+
+    // ---------- Login ----------
+    async function doLogin() {
+      hideAlert();
+      const cred = leggiCredenziali();
+      if (!cred) return;
+      setBusy(true);
+      try {
+        const { data, error } = await client.auth.signInWithPassword(cred);
+        if (error) throw error;
+        await loadDashboard(data.user);
+      } catch (e) {
+        showAlert('Errore login: ' + traduciErrore(e));
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    // ---------- Registrazione ----------
+    async function doRegister() {
+      hideAlert();
+      const cred = leggiCredenziali();
+      if (!cred) return;
+      setBusy(true);
+      try {
+        const { data, error } = await client.auth.signUp(cred);
+        if (error) throw error;
+
+        // Email già esistente: Supabase restituisce utente senza identities
+        if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+          showAlert('Questa email è già registrata. Usa "Accedi".');
+        } else if (data.session) {
+          showAlert('Registrazione completata!', false);
+          await loadDashboard(data.user);
+        } else {
+          showAlert('Registrazione completata! Controlla la posta per confermare l\'email, poi accedi.', false);
+        }
+      } catch (e) {
+        showAlert('Errore registrazione: ' + traduciErrore(e));
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    // ---------- Dashboard ----------
+    async function loadDashboard(user) {
+      $('auth-section').style.display = 'none';
+      $('dashboard-section').style.display = 'block';
+      $('user-email-display').textContent = user.email;
+
+      const container = $('license-container');
+      container.textContent = 'Caricamento...';
+
+      // Escape di % e _ per usare ilike come confronto esatto senza distinzione maiuscole
+      const emailEsatta = pulisciEmail(user.email).replace(/[\\%_]/g, '\\$&');
+
+      let licenses = null, error = null;
+      try {
+        const res = await client.from('licenses').select('*').ilike('owner_email', emailEsatta);
+        licenses = res.data; error = res.error;
+      } catch (e) { error = e; }
+
+      container.textContent = '';
+
+      if (error || !licenses || licenses.length === 0) {
+        const wrap = document.createElement('div');
+        wrap.style.cssText = 'text-align:center;margin:1.5rem 0;';
+        wrap.innerHTML = '<span class="status-badge badge-inactive">Nessuna Licenza Attiva</span>' +
+          '<p style="color:#cbd5e1;font-size:.9rem;margin-top:.5rem;"></p>';
+        wrap.querySelector('p').textContent = error
+          ? 'Impossibile caricare la licenza: ' + traduciErrore(error)
+          : 'Non risulta alcuna licenza univoca associata a questa email.';
+        container.appendChild(wrap);
+        return;
+      }
+
+      const lic = licenses[0];
+      const scaduta = lic.revoked === true || (lic.expires_at && new Date(lic.expires_at) < new Date());
+
+      const wrap = document.createElement('div');
+      wrap.style.textAlign = 'center';
+
+      const badge = document.createElement('span');
+      badge.className = 'status-badge ' + (scaduta ? 'badge-inactive' : 'badge-active');
+      badge.textContent = lic.revoked === true ? 'Licenza Revocata' : (scaduta ? 'Licenza Scaduta' : 'Licenza Attiva');
+
+      const label = document.createElement('p');
+      label.style.cssText = 'color:#94a3b8;font-size:.85rem;';
+      label.textContent = 'La tua chiave personale per Termux:';
+
+      const box = document.createElement('div');
+      box.className = 'license-box';
+      box.textContent = lic.license_key;
+
+      const exp = document.createElement('p');
+      exp.style.cssText = 'color:#cbd5e1;font-size:.85rem;';
+      const strong = document.createElement('strong');
+      strong.textContent = 'Scadenza: ';
+      exp.appendChild(strong);
+      exp.appendChild(document.createTextNode(
+        lic.expires_at ? new Date(lic.expires_at).toLocaleDateString('it-IT') : 'Illimitata'
+      ));
+
+      wrap.append(badge, label, box, exp);
+      container.appendChild(wrap);
+    }
+
+    // ---------- Logout ----------
+    $('logout-btn').addEventListener('click', async () => {
+      try { await client.auth.signOut(); } catch (e) {}
+      $('dashboard-section').style.display = 'none';
+      $('auth-section').style.display = 'block';
+      emailInput.value = '';
+      passInput.value = '';
+      hideAlert();
+    });
+
+    loginBtn.addEventListener('click', doLogin);
+    registerBtn.addEventListener('click', doRegister);
+    passInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') doLogin(); });
+
+    // Sessione già attiva
+    (async () => {
+      try {
+        const { data: { user } } = await client.auth.getUser();
+        if (user) loadDashboard(user);
+      } catch (e) { /* nessuna sessione */ }
+    })();
+  </script>
+</body>
+</html>
