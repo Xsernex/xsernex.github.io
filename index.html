@@ -26,7 +26,7 @@
         }
         .container {
             width: 100%;
-            max-width: 600px;
+            max-width: 550px;
             background: var(--card-bg);
             border: 1px solid rgba(0, 243, 255, 0.2);
             border-radius: 12px;
@@ -37,6 +37,156 @@
             text-align: center;
             color: var(--accent-cyan);
             font-size: 1.8rem;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
+            letter-spacing: 1px;
         }
-        p
+        p.subtitle {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 25px;
+        }
+        .card-section {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan));
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 0.95rem;
+            cursor: pointer;
+            text-align: center;
+            transition: opacity 0.2s;
+            margin-top: 10px;
+        }
+        .btn-alt {
+            background: transparent;
+            border: 1px solid var(--accent-cyan);
+            color: var(--accent-cyan);
+        }
+        .btn:hover {
+            opacity: 0.9;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 6px;
+            margin-bottom: 12px;
+            background: #0b0f19;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            color: #fff;
+            box-sizing: border-box;
+        }
+        label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+        .hidden {
+            display: none;
+        }
+        .box-info {
+            background: #0b0f19;
+            padding: 12px;
+            border-left: 4px solid var(--accent-cyan);
+            font-family: monospace;
+            font-size: 1.1rem;
+            text-align: center;
+            letter-spacing: 1px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>XSERNEX DEBUG</h1>
+        <p class="subtitle">Portale Ufficiale Gestione Licenze</p>
+
+        <!-- STEP 1: Autenticazione Google (Simile al video) -->
+        <div id="step-login" class="card-section">
+            <h3 style="margin-top: 0; color: #fff; font-size: 1.1rem;">1. Accedi con il tuo account</h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">Usa un account Google per collegare e salvare in modo sicuro la tua chiave di accesso.</p>
+            <button class="btn" onclick="mostraOpzioniChiave()">Accedi con Google</button>
+        </div>
+
+        <!-- STEP 2: Scelta tra chiave esistente o nuova chiave -->
+        <div id="step-choices" class="card-section hidden">
+            <h3 style="margin-top: 0; color: var(--accent-cyan); font-size: 1.1rem;">Seleziona un'opzione</h3>
+            
+            <button class="btn" onclick="mostraFormCollega()">Ho già una chiave, voglio collegarla</button>
+            <button class="btn btn-alt" onclick="richiediNuovaChiave()">Voglio una chiave nuova</button>
+        </div>
+
+        <!-- STEP 3A: Form per collegare chiave esistente -->
+        <div id="step-link-form" class="card-section hidden">
+            <h3 style="margin-top: 0; color: #fff; font-size: 1.1rem;">Collega la tua chiave</h3>
+            <label>Chiave di Licenza:</label>
+            <input type="text" id="input-key" placeholder="es. XSRX-XXXX-XXXX">
+            
+            <label>Nome Personaggio / ID Unico:</label>
+            <input type="text" id="input-char" placeholder="es. Red_Parma">
+            
+            <button class="btn" onclick="salvaCollegamento()">Salva e Associa</button>
+        </div>
+
+        <!-- STEP 3B: Schermata Chiave Assegnata -->
+        <div id="step-success" class="card-section hidden">
+            <h3 style="margin-top: 0; color: var(--accent-cyan); font-size: 1.1rem;">La tua Chiave Attiva</h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">Tutte le informazioni sono salvate sul tuo profilo.</p>
+            
+            <div class="box-info" id="final-key-display">XSRX-9F2B-4A1C-88E3</div>
+            
+            <p style="font-size: 0.85rem;">Personaggio collegato: <strong id="saved-char">-</strong></p>
+            <button class="btn btn-alt" onclick="location.reload()">Esci / Torna alla home</button>
+        </div>
+
+    </div>
+
+    <script>
+        function mostraOpzioniChiave() {
+            document.getElementById('step-login').classList.add('hidden');
+            document.getElementById('step-choices').classList.remove('hidden');
+        }
+
+        function mostraFormCollega() {
+            document.getElementById('step-choices').classList.add('hidden');
+            document.getElementById('step-link-form').classList.remove('hidden');
+        }
+
+        function richiediNuovaChiave() {
+            alert('Controllo disponibilità chiavi nel database...');
+            document.getElementById('step-choices').classList.add('hidden');
+            document.getElementById('saved-char-display'] = "Assegnata automaticamente";
+            document.getElementById('step-success').classList.remove('hidden');
+        }
+
+        function salvaCollegamento() {
+            const chiave = document.getElementById('input-key').value;
+            const personaggio = document.getElementById('input-char').value;
+            
+            if(!chiave || !personaggio) {
+                alert('Compila tutti i campi richiesti.');
+                return;
+            }
+            
+            document.getElementById('saved-char').innerText = personaggio;
+            document.getElementById('final-key-display').innerText = chiave.toUpperCase();
+            
+            document.getElementById('step-link-form').classList.add('hidden');
+            document.getElementById('step-success').classList.remove('hidden');
+            alert('Chiave collegata con successo!');
+        }
+    </script>
+</body>
+</html>
