@@ -26,6 +26,8 @@
     .alert-danger { background: #7f1d1d; color: #fca5a5; }
     .alert-success { background: #14532d; color: #86efac; }
 
+    .info-note { background: #0c2d44; border: 1px solid #0ea5e9; color: #7dd3fc; font-size: 0.8rem; padding: 0.6rem 0.7rem; border-radius: 6px; margin-bottom: 1rem; line-height: 1.4; }
+
     .dashboard { display: none; }
     .license-box { background: #0f172a; border: 1px dashed #38bdf8; padding: 1rem; border-radius: 8px; text-align: center; margin: 1rem 0; word-break: break-all; font-family: monospace; font-size: 1.1rem; color: #38bdf8; }
     .status-badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.8rem; font-weight: bold; margin-bottom: 1rem; }
@@ -33,6 +35,23 @@
     .badge-inactive { background: #b91c1c; color: #fff; }
     .logout-btn { background: #475569; color: white; margin-top: 1rem; width: 100%; }
     .logout-btn:hover { background: #334155; }
+
+    .guide-box { text-align: left; background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 1rem; margin: 1rem 0; }
+    .guide-box ol { padding-left: 1.2rem; margin: 0; }
+    .guide-box li { color: #cbd5e1; font-size: 0.88rem; margin-bottom: 0.9rem; line-height: 1.4; }
+    .guide-box li:last-child { margin-bottom: 0; }
+    .btn-kofi { background: #ff5e5b; color: #fff; display: inline-block; text-decoration: none; padding: 0.55rem 0.9rem; border-radius: 6px; font-size: 0.9rem; font-weight: bold; margin-top: 0.4rem; text-align: center; }
+    .btn-kofi:hover { background: #e24e4b; }
+    .copy-row { display: flex; gap: 6px; margin-top: 0.4rem; align-items: center; }
+    .copy-row code { flex: 1; background: #1e293b; border: 1px solid #334155; border-radius: 6px; padding: 0.5rem 0.6rem; font-size: 0.8rem; color: #e2e8f0; word-break: break-all; }
+    .copy-btn { width: auto; flex-shrink: 0; padding: 0.5rem 0.7rem; font-size: 0.8rem; background: #334155; color: #e2e8f0; }
+    .copy-btn:hover { background: #475569; }
+    .copy-btn.copied { background: #15803d; }
+
+    .download-section { margin-top: 1.2rem; text-align: left; }
+    .download-btn { background: #38bdf8; color: #0f172a; margin-bottom: 0.8rem; }
+    .download-btn:hover { background: #0ea5e9; }
+    .install-label { color: #94a3b8; font-size: 0.8rem; margin-bottom: 0.3rem; }
   </style>
 </head>
 <body>
@@ -43,6 +62,8 @@
       <p class="subtitle">Portale Ufficiale Gestione Licenze</p>
 
       <div id="alert" class="alert"></div>
+
+      <div class="info-note">Usa la stessa email con cui ti abboni su Ko-fi: è quella che collega il pagamento al tuo account.</div>
 
       <div class="form-group">
         <label for="email">Email account</label>
@@ -72,6 +93,9 @@
   <script>
     const SUPABASE_URL = 'https://uyouarurqcoyfaxozjrb.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_BddM4racaLDFFwVY4rmoFQ_XFg4gv0b';
+    const KOFI_URL = 'https://ko-fi.com/xsernex';
+    // Passo D (ancora da definire): link di download dell'installer pubblico (loader.rb + setup.rb, nessun file protetto).
+    const DOWNLOAD_URL = 'https://TUO-LINK-DOWNLOAD-DA-CONFIGURARE';
 
     const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -85,7 +109,7 @@
     function pulisciEmail(v) {
       return (v || '')
         .normalize('NFKC')
-        .replace(/[\s\u200B-\u200D\uFEFF]/g, '')
+        .replace(/[\s​-‍﻿]/g, '')
         .toLowerCase();
     }
 
@@ -127,6 +151,34 @@
       if (!email || !password) { showAlert('Inserisci email e password.'); return null; }
       if (!emailValida(email)) { showAlert('Email non valida: controlla il dominio (es. .com, non .co).'); return null; }
       return { email, password };
+    }
+
+    // ---------- Copia negli appunti ----------
+    async function copyText(text, btn) {
+      const original = btn.textContent;
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(text);
+        } else {
+          const ta = document.createElement('textarea');
+          ta.value = text;
+          ta.style.position = 'fixed';
+          ta.style.opacity = '0';
+          document.body.appendChild(ta);
+          ta.focus();
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+        }
+        btn.textContent = 'Copiato!';
+        btn.classList.add('copied');
+      } catch (e) {
+        btn.textContent = 'Errore copia';
+      }
+      setTimeout(() => {
+        btn.textContent = original;
+        btn.classList.remove('copied');
+      }, 1500);
     }
 
     // ---------- Login ----------
@@ -172,6 +224,99 @@
       }
     }
 
+    // ---------- Guida senza licenza ----------
+    function renderGuidaAbbonamento(container, userEmail) {
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'text-align:center;margin:1rem 0;';
+
+      const badge = document.createElement('span');
+      badge.className = 'status-badge badge-inactive';
+      badge.textContent = 'Nessuna Licenza Attiva';
+      wrap.appendChild(badge);
+
+      const guide = document.createElement('div');
+      guide.className = 'guide-box';
+
+      const ol = document.createElement('ol');
+
+      const li1 = document.createElement('li');
+      li1.textContent = '1. Abbonati su Ko-fi:';
+      const kofiLink = document.createElement('a');
+      kofiLink.href = KOFI_URL;
+      kofiLink.target = '_blank';
+      kofiLink.rel = 'noopener';
+      kofiLink.className = 'btn-kofi';
+      kofiLink.textContent = 'Vai a Ko-fi';
+      const li1wrap = document.createElement('div');
+      li1wrap.appendChild(li1);
+      li1wrap.appendChild(kofiLink);
+
+      const li2 = document.createElement('li');
+      li2.textContent = '2. Usa questa stessa email al momento del pagamento:';
+      const copyRow = document.createElement('div');
+      copyRow.className = 'copy-row';
+      const codeEl = document.createElement('code');
+      codeEl.textContent = userEmail;
+      const copyBtn = document.createElement('button');
+      copyBtn.type = 'button';
+      copyBtn.className = 'copy-btn';
+      copyBtn.textContent = 'Copia';
+      copyBtn.addEventListener('click', () => copyText(userEmail, copyBtn));
+      copyRow.appendChild(codeEl);
+      copyRow.appendChild(copyBtn);
+      const li2wrap = document.createElement('div');
+      li2wrap.appendChild(li2);
+      li2wrap.appendChild(copyRow);
+
+      const li3 = document.createElement('li');
+      li3.textContent = '3. Dopo il pagamento la tua chiave comparirà qui automaticamente. Se non la vedi subito, ricarica questa pagina tra qualche minuto.';
+
+      ol.appendChild(li1wrap);
+      ol.appendChild(li2wrap);
+      ol.appendChild(li3);
+      guide.appendChild(ol);
+      wrap.appendChild(guide);
+
+      container.appendChild(wrap);
+    }
+
+    // ---------- Sezione download / installazione ----------
+    function renderDownload(container, licenseKey) {
+      const section = document.createElement('div');
+      section.className = 'download-section';
+
+      const dlBtn = document.createElement('a');
+      dlBtn.href = DOWNLOAD_URL;
+      dlBtn.target = '_blank';
+      dlBtn.rel = 'noopener';
+      dlBtn.className = 'download-btn';
+      dlBtn.style.cssText = 'display:block;text-align:center;text-decoration:none;padding:0.75rem;border-radius:6px;font-weight:bold;';
+      dlBtn.textContent = 'Scarica XSERNEX';
+      section.appendChild(dlBtn);
+
+      const label = document.createElement('p');
+      label.className = 'install-label';
+      label.textContent = 'Comando di installazione per Termux:';
+      section.appendChild(label);
+
+      const installCmd = `mkdir -p ~/xsernex && cd ~/xsernex && echo "${licenseKey}" > ~/.pd_license_key && curl -L -o setup.rb ${DOWNLOAD_URL} && ruby setup.rb`;
+
+      const copyRow = document.createElement('div');
+      copyRow.className = 'copy-row';
+      const codeEl = document.createElement('code');
+      codeEl.textContent = installCmd;
+      const copyBtn = document.createElement('button');
+      copyBtn.type = 'button';
+      copyBtn.className = 'copy-btn';
+      copyBtn.textContent = 'Copia';
+      copyBtn.addEventListener('click', () => copyText(installCmd, copyBtn));
+      copyRow.appendChild(codeEl);
+      copyRow.appendChild(copyBtn);
+      section.appendChild(copyRow);
+
+      container.appendChild(section);
+    }
+
     // ---------- Dashboard ----------
     async function loadDashboard(user) {
       $('auth-section').style.display = 'none';
@@ -192,15 +337,18 @@
 
       container.textContent = '';
 
-      if (error || !licenses || licenses.length === 0) {
+      if (error) {
         const wrap = document.createElement('div');
         wrap.style.cssText = 'text-align:center;margin:1.5rem 0;';
         wrap.innerHTML = '<span class="status-badge badge-inactive">Nessuna Licenza Attiva</span>' +
           '<p style="color:#cbd5e1;font-size:.9rem;margin-top:.5rem;"></p>';
-        wrap.querySelector('p').textContent = error
-          ? 'Impossibile caricare la licenza: ' + traduciErrore(error)
-          : 'Non risulta alcuna licenza univoca associata a questa email.';
+        wrap.querySelector('p').textContent = 'Impossibile caricare la licenza: ' + traduciErrore(error);
         container.appendChild(wrap);
+        return;
+      }
+
+      if (!licenses || licenses.length === 0) {
+        renderGuidaAbbonamento(container, user.email);
         return;
       }
 
@@ -232,6 +380,25 @@
       ));
 
       wrap.append(badge, label, box, exp);
+
+      if (scaduta) {
+        const renewNote = document.createElement('p');
+        renewNote.style.cssText = 'color:#cbd5e1;font-size:.85rem;margin-top:.8rem;';
+        renewNote.textContent = 'Rinnova il tuo abbonamento su Ko-fi per riattivare la licenza:';
+        const kofiLink = document.createElement('a');
+        kofiLink.href = KOFI_URL;
+        kofiLink.target = '_blank';
+        kofiLink.rel = 'noopener';
+        kofiLink.className = 'btn-kofi';
+        kofiLink.style.display = 'block';
+        kofiLink.style.marginTop = '0.5rem';
+        kofiLink.textContent = 'Rinnova su Ko-fi';
+        wrap.appendChild(renewNote);
+        wrap.appendChild(kofiLink);
+      } else {
+        renderDownload(wrap, lic.license_key);
+      }
+
       container.appendChild(wrap);
     }
 
