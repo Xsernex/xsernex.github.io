@@ -52,11 +52,31 @@
     .download-btn { background: #38bdf8; color: #0f172a; margin-bottom: 0.8rem; }
     .download-btn:hover { background: #0ea5e9; }
     .install-label { color: #94a3b8; font-size: 0.8rem; margin-bottom: 0.3rem; }
+
+    .topbar { display: flex; justify-content: flex-end; margin-bottom: 0.5rem; position: relative; }
+    .menu-btn { width: auto; background: transparent; color: #cbd5e1; font-size: 1.4rem; padding: 0.2rem 0.6rem; line-height: 1; }
+    .menu-btn:hover { background: #334155; border-radius: 6px; }
+    .menu-dropdown { display: none; position: absolute; top: 2.2rem; right: 0; background: #1e293b; border: 1px solid #334155; border-radius: 8px; overflow: hidden; z-index: 10; min-width: 160px; box-shadow: 0 8px 20px rgba(0,0,0,0.4); }
+    .menu-dropdown.open { display: block; }
+    .menu-dropdown button { width: 100%; background: transparent; color: #e2e8f0; text-align: left; font-weight: normal; font-size: 0.9rem; padding: 0.7rem 1rem; border-radius: 0; }
+    .menu-dropdown button:hover { background: #334155; }
+    .view { display: none; }
+    .view.active { display: block; }
   </style>
 </head>
 <body>
 
   <div class="card">
+    <div class="topbar">
+      <button type="button" class="menu-btn" id="menu-btn">☰</button>
+      <div class="menu-dropdown" id="menu-dropdown">
+        <button type="button" data-view="account">Account</button>
+        <button type="button" data-view="guida">Guida</button>
+        <button type="button" data-view="download">Download</button>
+      </div>
+    </div>
+
+    <div id="view-account" class="view active">
     <div id="auth-section">
       <h1>XSERNEX</h1>
       <p class="subtitle">Portale Ufficiale Gestione Licenze</p>
@@ -80,15 +100,6 @@
         <button type="button" id="login-btn" class="btn-login">Accedi</button>
         <button type="button" id="register-btn" class="btn-register">Registrati</button>
       </div>
-
-      <div class="download-section" style="margin-top:1.5rem;">
-        <p class="install-label">Hai già una chiave di licenza? Comando di installazione per Termux:</p>
-        <div class="copy-row">
-          <code id="public-install-cmd">mkdir -p ~/xsernex && cd ~/xsernex && echo "INCOLLA-QUI-LA-TUA-CHIAVE" &gt; ~/.pd_license_key && curl -L -o setup.rb https://xsernex.github.io/setup.rb && curl -L -o setup.dat https://xsernex.github.io/setup.dat && curl -L -o loader.dat https://xsernex.github.io/loader.dat && curl -L -o pd_debug.dat https://xsernex.github.io/pd_debug.dat && ruby setup.rb</code>
-          <button type="button" class="copy-btn" onclick="copyText(document.getElementById('public-install-cmd').textContent, this)">Copia</button>
-        </div>
-        <p class="subtitle" style="font-size:0.85rem;margin-top:0.4rem;">Sostituisci INCOLLA-QUI-LA-TUA-CHIAVE con la chiave che hai ricevuto dopo l'abbonamento Ko-fi.</p>
-      </div>
     </div>
 
     <div id="dashboard-section" class="dashboard">
@@ -96,6 +107,29 @@
       <p class="subtitle" id="user-email-display"></p>
       <div id="license-container"></div>
       <button class="logout-btn" id="logout-btn">Esci dall'account</button>
+    </div>
+    </div>
+
+    <div id="view-guida" class="view">
+      <h1>Guida</h1>
+      <p class="subtitle">Come abbonarsi e installare Xsernex Debug</p>
+      <div class="guide-box">
+        <ol>
+          <li>1. Abbonati su Ko-fi (abbonamento mensile, membership):
+            <div><a href="#" id="guida-kofi-link" target="_blank" rel="noopener" class="btn-kofi">Vai a Ko-fi</a></div>
+          </li>
+          <li>2. Usa la stessa email sia su Ko-fi che per registrarti qui sul sito: è quella che collega il pagamento al tuo account.</li>
+          <li>3. Dopo il pagamento, vai su <strong>Account</strong> e accedi (o registrati la prima volta): la tua chiave di licenza comparirà in automatico.</li>
+          <li>4. Vai nella sezione <strong>Download</strong> del menu: lì trovi il comando pronto da incollare su Termux, con la tua chiave già inserita.</li>
+          <li>5. Il tool si aggiorna da solo. Se l'abbonamento scade o viene annullato, la licenza smette di funzionare finché non rinnovi.</li>
+        </ol>
+      </div>
+    </div>
+
+    <div id="view-download" class="view">
+      <h1>Download</h1>
+      <p class="subtitle">Installazione su Termux</p>
+      <div id="download-content"></div>
     </div>
   </div>
 
@@ -107,6 +141,9 @@
     const DOWNLOAD_BASE = 'https://xsernex.github.io';
 
     const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let currentUser = null;
+    let currentLicense = null; // { key, revoked, expired }
 
     const $ = (id) => document.getElementById(id);
     const emailInput = $('email');
@@ -319,6 +356,7 @@
 
     // ---------- Dashboard ----------
     async function loadDashboard(user) {
+      currentUser = user;
       $('auth-section').style.display = 'none';
       $('dashboard-section').style.display = 'block';
       $('user-email-display').textContent = user.email;
@@ -344,11 +382,15 @@
           '<p style="color:#cbd5e1;font-size:.9rem;margin-top:.5rem;"></p>';
         wrap.querySelector('p').textContent = 'Impossibile caricare la licenza: ' + traduciErrore(error);
         container.appendChild(wrap);
+        currentLicense = null;
+        renderDownloadView();
         return;
       }
 
       if (!licenses || licenses.length === 0) {
         renderGuidaAbbonamento(container, user.email);
+        currentLicense = null;
+        renderDownloadView();
         return;
       }
 
@@ -395,21 +437,76 @@
         kofiLink.textContent = 'Rinnova su Ko-fi';
         wrap.appendChild(renewNote);
         wrap.appendChild(kofiLink);
-      } else {
-        renderDownload(wrap, lic.license_key);
       }
 
       container.appendChild(wrap);
+      currentLicense = { key: lic.license_key, revoked: lic.revoked === true, scaduta };
+      renderDownloadView();
     }
+
+    // ---------- Menu / navigazione a viste ----------
+    function showView(name) {
+      ['account', 'guida', 'download'].forEach((v) => {
+        $('view-' + v).classList.toggle('active', v === name);
+      });
+      $('menu-dropdown').classList.remove('open');
+      if (name === 'download') renderDownloadView();
+    }
+
+    function renderDownloadView() {
+      const c = $('download-content');
+      c.textContent = '';
+      if (!currentUser) {
+        const p = document.createElement('p');
+        p.style.cssText = 'color:#cbd5e1;font-size:.9rem;margin-bottom:1rem;';
+        p.textContent = 'Devi prima accedere al tuo account per vedere il comando di installazione con la tua chiave.';
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn-login';
+        btn.textContent = 'Vai su Account';
+        btn.addEventListener('click', () => showView('account'));
+        c.append(p, btn);
+        return;
+      }
+      if (!currentLicense) {
+        const p = document.createElement('p');
+        p.style.cssText = 'color:#cbd5e1;font-size:.9rem;';
+        p.textContent = 'Non risulta nessuna licenza sul tuo account. Guarda la sezione Account per i dettagli su come abbonarti.';
+        c.appendChild(p);
+        return;
+      }
+      if (currentLicense.revoked || currentLicense.scaduta) {
+        const p = document.createElement('p');
+        p.style.cssText = 'color:#cbd5e1;font-size:.9rem;';
+        p.textContent = currentLicense.revoked ? 'La tua licenza è stata revocata.' : 'La tua licenza è scaduta. Rinnova su Ko-fi per tornare a scaricare il tool.';
+        c.appendChild(p);
+        return;
+      }
+      renderDownload(c, currentLicense.key);
+    }
+
+    $('menu-btn').addEventListener('click', () => {
+      $('menu-dropdown').classList.toggle('open');
+    });
+    document.querySelectorAll('#menu-dropdown button').forEach((b) => {
+      b.addEventListener('click', () => showView(b.dataset.view));
+    });
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.topbar')) $('menu-dropdown').classList.remove('open');
+    });
+    $('guida-kofi-link').href = KOFI_URL;
 
     // ---------- Logout ----------
     $('logout-btn').addEventListener('click', async () => {
       try { await client.auth.signOut(); } catch (e) {}
+      currentUser = null;
+      currentLicense = null;
       $('dashboard-section').style.display = 'none';
       $('auth-section').style.display = 'block';
       emailInput.value = '';
       passInput.value = '';
       hideAlert();
+      showView('account');
     });
 
     loginBtn.addEventListener('click', doLogin);
