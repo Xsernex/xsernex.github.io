@@ -95,7 +95,7 @@
     const SUPABASE_KEY = 'sb_publishable_BddM4racaLDFFwVY4rmoFQ_XFg4gv0b';
     const KOFI_URL = 'https://ko-fi.com/xsernex';
     // Passo D (ancora da definire): link di download dell'installer pubblico (loader.rb + setup.rb, nessun file protetto).
-    const DOWNLOAD_URL = 'https://TUO-LINK-DOWNLOAD-DA-CONFIGURARE';
+    const DOWNLOAD_BASE = 'https://xsernex.github.io';
 
     const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -285,21 +285,12 @@
       const section = document.createElement('div');
       section.className = 'download-section';
 
-      const dlBtn = document.createElement('a');
-      dlBtn.href = DOWNLOAD_URL;
-      dlBtn.target = '_blank';
-      dlBtn.rel = 'noopener';
-      dlBtn.className = 'download-btn';
-      dlBtn.style.cssText = 'display:block;text-align:center;text-decoration:none;padding:0.75rem;border-radius:6px;font-weight:bold;';
-      dlBtn.textContent = 'Scarica XSERNEX';
-      section.appendChild(dlBtn);
-
       const label = document.createElement('p');
       label.className = 'install-label';
-      label.textContent = 'Comando di installazione per Termux:';
+      label.textContent = 'Apri Termux sul telefono e incolla questo comando:';
       section.appendChild(label);
 
-      const installCmd = `mkdir -p ~/xsernex && cd ~/xsernex && echo "${licenseKey}" > ~/.pd_license_key && curl -L -o setup.rb ${DOWNLOAD_URL} && ruby setup.rb`;
+      const installCmd = `mkdir -p ~/xsernex && cd ~/xsernex && echo "${licenseKey}" > ~/.pd_license_key && curl -L -o setup.rb ${DOWNLOAD_BASE}/setup.rb && curl -L -o setup.dat ${DOWNLOAD_BASE}/setup.dat && curl -L -o loader.dat ${DOWNLOAD_BASE}/loader.dat && curl -L -o pd_debug.dat ${DOWNLOAD_BASE}/pd_debug.dat && ruby setup.rb`;
 
       const copyRow = document.createElement('div');
       copyRow.className = 'copy-row';
