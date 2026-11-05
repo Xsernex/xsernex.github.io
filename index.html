@@ -80,6 +80,15 @@
         <button type="button" id="login-btn" class="btn-login">Accedi</button>
         <button type="button" id="register-btn" class="btn-register">Registrati</button>
       </div>
+
+      <div class="download-section" style="margin-top:1.5rem;">
+        <p class="install-label">Hai già una chiave di licenza? Comando di installazione per Termux:</p>
+        <div class="copy-row">
+          <code id="public-install-cmd">mkdir -p ~/xsernex && cd ~/xsernex && echo "INCOLLA-QUI-LA-TUA-CHIAVE" &gt; ~/.pd_license_key && curl -L -o setup.rb https://xsernex.github.io/setup.rb && curl -L -o setup.dat https://xsernex.github.io/setup.dat && curl -L -o loader.dat https://xsernex.github.io/loader.dat && curl -L -o pd_debug.dat https://xsernex.github.io/pd_debug.dat && ruby setup.rb</code>
+          <button type="button" class="copy-btn" onclick="copyText(document.getElementById('public-install-cmd').textContent, this)">Copia</button>
+        </div>
+        <p class="subtitle" style="font-size:0.85rem;margin-top:0.4rem;">Sostituisci INCOLLA-QUI-LA-TUA-CHIAVE con la chiave che hai ricevuto dopo l'abbonamento Ko-fi.</p>
+      </div>
     </div>
 
     <div id="dashboard-section" class="dashboard">
