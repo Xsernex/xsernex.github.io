@@ -417,28 +417,39 @@
       if (name === 'download') renderDownloadView();
     }
 
-    // Download: sempre visibile. Se sei loggato con licenza attiva, la chiave vera
-    // sostituisce in automatico il segnaposto; altrimenti resta il segnaposto da modificare a mano.
+    // Download: visibile SOLO se sei loggato e hai una licenza attiva (non scaduta, non revocata).
+    // In ogni altro caso non compare nessun comando, solo un messaggio.
     function renderDownloadView() {
       const c = $('download-content');
       c.textContent = '';
       const attiva = currentUser && currentLicense && !currentLicense.revoked && !currentLicense.scaduta;
 
-      const note = document.createElement('p');
-      note.style.cssText = 'color:#94a3b8;font-size:.8rem;margin-bottom:0.8rem;';
       if (attiva) {
-        note.textContent = 'La tua chiave è già inserita nel comando qui sotto.';
-      } else if (currentUser && currentLicense && (currentLicense.revoked || currentLicense.scaduta)) {
-        note.textContent = 'La tua licenza non è attiva al momento: sostituisci il segnaposto con una chiave valida, oppure rinnova/abbonati su Ko-fi.';
-      } else if (currentUser) {
-        note.textContent = 'Non hai ancora una licenza: guarda la scheda Guida per abbonarti. Appena attiva, la chiave comparirà qui da sola.';
-      } else {
-        note.textContent = 'Accedi dalla scheda Account per far comparire qui la tua chiave reale in automatico, oppure sostituisci a mano il segnaposto nel comando.';
+        renderDownload(c, currentLicense.key);
+        return;
       }
-      c.appendChild(note);
 
-      const key = attiva ? currentLicense.key : 'INCOLLA-QUI-LA-TUA-CHIAVE';
-      renderDownload(c, key);
+      const p = document.createElement('p');
+      p.style.cssText = 'color:#cbd5e1;font-size:.9rem;margin-bottom:1rem;';
+      let btnLabel = 'Vai su Account';
+      let btnView = 'account';
+      if (!currentUser) {
+        p.textContent = 'Devi accedere al tuo account con un abbonamento attivo per vedere il comando di installazione.';
+      } else if (!currentLicense) {
+        p.textContent = 'Non hai ancora una licenza su questo account. Abbonati su Ko-fi (vedi la scheda Guida) per sbloccare il download.';
+        btnLabel = 'Vai alla Guida';
+        btnView = 'guida';
+      } else {
+        p.textContent = currentLicense.revoked
+          ? 'La tua licenza è stata revocata: il download non è disponibile.'
+          : 'La tua licenza è scaduta: rinnova su Ko-fi per tornare a scaricare il tool.';
+      }
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'btn-login';
+      btn.textContent = btnLabel;
+      btn.addEventListener('click', () => showView(btnView));
+      c.append(p, btn);
     }
 
     document.querySelectorAll('.tab-btn').forEach((b) => {
