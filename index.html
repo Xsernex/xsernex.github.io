@@ -53,13 +53,9 @@
     .download-btn:hover { background: #0ea5e9; }
     .install-label { color: #94a3b8; font-size: 0.8rem; margin-bottom: 0.3rem; }
 
-    .topbar { display: flex; justify-content: flex-end; margin-bottom: 0.5rem; position: relative; }
-    .menu-btn { width: auto; background: transparent; color: #cbd5e1; font-size: 1.4rem; padding: 0.2rem 0.6rem; line-height: 1; }
-    .menu-btn:hover { background: #334155; border-radius: 6px; }
-    .menu-dropdown { display: none; position: absolute; top: 2.2rem; right: 0; background: #1e293b; border: 1px solid #334155; border-radius: 8px; overflow: hidden; z-index: 10; min-width: 160px; box-shadow: 0 8px 20px rgba(0,0,0,0.4); }
-    .menu-dropdown.open { display: block; }
-    .menu-dropdown button { width: 100%; background: transparent; color: #e2e8f0; text-align: left; font-weight: normal; font-size: 0.9rem; padding: 0.7rem 1rem; border-radius: 0; }
-    .menu-dropdown button:hover { background: #334155; }
+    .tabs { display: flex; gap: 6px; margin-bottom: 1rem; }
+    .tab-btn { flex: 1; background: #0f172a; color: #94a3b8; border: 1px solid #334155; padding: 0.55rem 0.3rem; font-size: 0.78rem; font-weight: normal; border-radius: 6px; }
+    .tab-btn.active { background: #334155; color: #fff; font-weight: bold; border-color: #475569; }
     .view { display: none; }
     .view.active { display: block; }
   </style>
@@ -67,13 +63,10 @@
 <body>
 
   <div class="card">
-    <div class="topbar">
-      <button type="button" class="menu-btn" id="menu-btn">☰</button>
-      <div class="menu-dropdown" id="menu-dropdown">
-        <button type="button" data-view="account">Account</button>
-        <button type="button" data-view="guida">Guida</button>
-        <button type="button" data-view="download">Download</button>
-      </div>
+    <div class="tabs">
+      <button type="button" class="tab-btn active" data-view="account">Account</button>
+      <button type="button" class="tab-btn" data-view="guida">Guida</button>
+      <button type="button" class="tab-btn" data-view="download">Download</button>
     </div>
 
     <div id="view-account" class="view active">
@@ -115,13 +108,12 @@
       <p class="subtitle">Come abbonarsi e installare Xsernex Debug</p>
       <div class="guide-box">
         <ol>
-          <li>1. Abbonati su Ko-fi (abbonamento mensile, membership):
+          <li>Abbonati su Ko-fi (abbonamento mensile):
             <div><a href="#" id="guida-kofi-link" target="_blank" rel="noopener" class="btn-kofi">Vai a Ko-fi</a></div>
           </li>
-          <li>2. Usa la stessa email sia su Ko-fi che per registrarti qui sul sito: è quella che collega il pagamento al tuo account.</li>
-          <li>3. Dopo il pagamento, vai su <strong>Account</strong> e accedi (o registrati la prima volta): la tua chiave di licenza comparirà in automatico.</li>
-          <li>4. Vai nella sezione <strong>Download</strong> del menu: lì trovi il comando pronto da incollare su Termux, con la tua chiave già inserita.</li>
-          <li>5. Il tool si aggiorna da solo. Se l'abbonamento scade o viene annullato, la licenza smette di funzionare finché non rinnovi.</li>
+          <li>Usa la stessa email dell'account che hai (o crei) su questo sito: è quella che collega il pagamento alla tua licenza.</li>
+          <li>Dopo il pagamento la tua chiave comparirà da sola nella scheda <strong>Download</strong>, senza bisogno di fare nulla.</li>
+          <li>Il tool si aggiorna da solo. Se l'abbonamento scade o viene annullato, la licenza smette di funzionare finché non rinnovi.</li>
         </ol>
       </div>
     </div>
@@ -270,7 +262,7 @@
       }
     }
 
-    // ---------- Guida senza licenza ----------
+    // ---------- Guida senza licenza (versione breve: il dettaglio sta nella scheda Guida) ----------
     function renderGuidaAbbonamento(container, userEmail) {
       const wrap = document.createElement('div');
       wrap.style.cssText = 'text-align:center;margin:1rem 0;';
@@ -280,48 +272,18 @@
       badge.textContent = 'Nessuna Licenza Attiva';
       wrap.appendChild(badge);
 
-      const guide = document.createElement('div');
-      guide.className = 'guide-box';
+      const p = document.createElement('p');
+      p.style.cssText = 'color:#cbd5e1;font-size:.85rem;margin-top:.8rem;';
+      p.textContent = 'Non risulta ancora nessuna licenza su questo account. Vai nella scheda Guida per sapere come abbonarti.';
+      wrap.appendChild(p);
 
-      const ol = document.createElement('ol');
-
-      const li1 = document.createElement('li');
-      li1.textContent = '1. Abbonati su Ko-fi:';
-      const kofiLink = document.createElement('a');
-      kofiLink.href = KOFI_URL;
-      kofiLink.target = '_blank';
-      kofiLink.rel = 'noopener';
-      kofiLink.className = 'btn-kofi';
-      kofiLink.textContent = 'Vai a Ko-fi';
-      const li1wrap = document.createElement('div');
-      li1wrap.appendChild(li1);
-      li1wrap.appendChild(kofiLink);
-
-      const li2 = document.createElement('li');
-      li2.textContent = '2. Usa questa stessa email al momento del pagamento:';
-      const copyRow = document.createElement('div');
-      copyRow.className = 'copy-row';
-      const codeEl = document.createElement('code');
-      codeEl.textContent = userEmail;
-      const copyBtn = document.createElement('button');
-      copyBtn.type = 'button';
-      copyBtn.className = 'copy-btn';
-      copyBtn.textContent = 'Copia';
-      copyBtn.addEventListener('click', () => copyText(userEmail, copyBtn));
-      copyRow.appendChild(codeEl);
-      copyRow.appendChild(copyBtn);
-      const li2wrap = document.createElement('div');
-      li2wrap.appendChild(li2);
-      li2wrap.appendChild(copyRow);
-
-      const li3 = document.createElement('li');
-      li3.textContent = '3. Dopo il pagamento la tua chiave comparirà qui automaticamente. Se non la vedi subito, ricarica questa pagina tra qualche minuto.';
-
-      ol.appendChild(li1wrap);
-      ol.appendChild(li2wrap);
-      ol.appendChild(li3);
-      guide.appendChild(ol);
-      wrap.appendChild(guide);
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'btn-kofi';
+      btn.style.cssText = 'border:none;cursor:pointer;margin-top:0.6rem;';
+      btn.textContent = 'Vai alla Guida';
+      btn.addEventListener('click', () => showView('guida'));
+      wrap.appendChild(btn);
 
       container.appendChild(wrap);
     }
@@ -444,55 +406,43 @@
       renderDownloadView();
     }
 
-    // ---------- Menu / navigazione a viste ----------
+    // ---------- Navigazione a schede ----------
     function showView(name) {
       ['account', 'guida', 'download'].forEach((v) => {
         $('view-' + v).classList.toggle('active', v === name);
       });
-      $('menu-dropdown').classList.remove('open');
+      document.querySelectorAll('.tab-btn').forEach((b) => {
+        b.classList.toggle('active', b.dataset.view === name);
+      });
       if (name === 'download') renderDownloadView();
     }
 
+    // Download: sempre visibile. Se sei loggato con licenza attiva, la chiave vera
+    // sostituisce in automatico il segnaposto; altrimenti resta il segnaposto da modificare a mano.
     function renderDownloadView() {
       const c = $('download-content');
       c.textContent = '';
-      if (!currentUser) {
-        const p = document.createElement('p');
-        p.style.cssText = 'color:#cbd5e1;font-size:.9rem;margin-bottom:1rem;';
-        p.textContent = 'Devi prima accedere al tuo account per vedere il comando di installazione con la tua chiave.';
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'btn-login';
-        btn.textContent = 'Vai su Account';
-        btn.addEventListener('click', () => showView('account'));
-        c.append(p, btn);
-        return;
+      const attiva = currentUser && currentLicense && !currentLicense.revoked && !currentLicense.scaduta;
+
+      const note = document.createElement('p');
+      note.style.cssText = 'color:#94a3b8;font-size:.8rem;margin-bottom:0.8rem;';
+      if (attiva) {
+        note.textContent = 'La tua chiave è già inserita nel comando qui sotto.';
+      } else if (currentUser && currentLicense && (currentLicense.revoked || currentLicense.scaduta)) {
+        note.textContent = 'La tua licenza non è attiva al momento: sostituisci il segnaposto con una chiave valida, oppure rinnova/abbonati su Ko-fi.';
+      } else if (currentUser) {
+        note.textContent = 'Non hai ancora una licenza: guarda la scheda Guida per abbonarti. Appena attiva, la chiave comparirà qui da sola.';
+      } else {
+        note.textContent = 'Accedi dalla scheda Account per far comparire qui la tua chiave reale in automatico, oppure sostituisci a mano il segnaposto nel comando.';
       }
-      if (!currentLicense) {
-        const p = document.createElement('p');
-        p.style.cssText = 'color:#cbd5e1;font-size:.9rem;';
-        p.textContent = 'Non risulta nessuna licenza sul tuo account. Guarda la sezione Account per i dettagli su come abbonarti.';
-        c.appendChild(p);
-        return;
-      }
-      if (currentLicense.revoked || currentLicense.scaduta) {
-        const p = document.createElement('p');
-        p.style.cssText = 'color:#cbd5e1;font-size:.9rem;';
-        p.textContent = currentLicense.revoked ? 'La tua licenza è stata revocata.' : 'La tua licenza è scaduta. Rinnova su Ko-fi per tornare a scaricare il tool.';
-        c.appendChild(p);
-        return;
-      }
-      renderDownload(c, currentLicense.key);
+      c.appendChild(note);
+
+      const key = attiva ? currentLicense.key : 'INCOLLA-QUI-LA-TUA-CHIAVE';
+      renderDownload(c, key);
     }
 
-    $('menu-btn').addEventListener('click', () => {
-      $('menu-dropdown').classList.toggle('open');
-    });
-    document.querySelectorAll('#menu-dropdown button').forEach((b) => {
+    document.querySelectorAll('.tab-btn').forEach((b) => {
       b.addEventListener('click', () => showView(b.dataset.view));
-    });
-    document.addEventListener('click', (e) => {
-      if (!e.target.closest('.topbar')) $('menu-dropdown').classList.remove('open');
     });
     $('guida-kofi-link').href = KOFI_URL;
 
