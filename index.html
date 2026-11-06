@@ -1,20 +1,20 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>XSERNEX - Portale Gestione Licenze</title>
+  <title>XSERNEX - License Portal</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     body { background-color: #0f172a; color: #f8fafc; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 12px; }
     .card { background: #1e293b; padding: 1.5rem 1.2rem; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); width: 100%; max-width: 420px; border: 1px solid #334155; }
-    h1 { color: #38bdf8; text-align: center; margin-bottom: 0.5rem; font-size: 1.8rem; }
+    h1 { text-align: center; margin-bottom: 0.5rem; font-size: 1.8rem; background: linear-gradient(90deg, #fb923c, #ef4444); -webkit-background-clip: text; background-clip: text; color: transparent; }
     p.subtitle { text-align: center; color: #94a3b8; font-size: 0.9rem; margin-bottom: 1.5rem; }
     .form-group { margin-bottom: 1.2rem; }
     label { display: block; margin-bottom: 0.4rem; color: #cbd5e1; font-size: 0.9rem; }
     input { width: 100%; padding: 0.75rem 0.6rem; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: #fff; font-size: 0.9rem; outline: none; text-overflow: clip; }
-    input:focus { border-color: #38bdf8; }
+    input:focus { border-color: #fb923c; }
     .btn-container { display: flex; gap: 10px; margin-top: 1rem; }
     button { width: 100%; padding: 0.75rem; border: none; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: background 0.2s; }
     button:disabled { opacity: 0.6; cursor: wait; }
@@ -29,7 +29,7 @@
     .info-note { background: #0c2d44; border: 1px solid #0ea5e9; color: #7dd3fc; font-size: 0.8rem; padding: 0.6rem 0.7rem; border-radius: 6px; margin-bottom: 1rem; line-height: 1.4; }
 
     .dashboard { display: none; }
-    .license-box { background: #0f172a; border: 1px dashed #38bdf8; padding: 1rem; border-radius: 8px; text-align: center; margin: 1rem 0; word-break: break-all; font-family: monospace; font-size: 1.1rem; color: #38bdf8; }
+    .license-box { background: #0f172a; border: 1px dashed #fb923c; padding: 1rem; border-radius: 8px; text-align: center; margin: 1rem 0; word-break: break-all; font-family: monospace; font-size: 1.1rem; color: #fb923c; }
     .status-badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.8rem; font-weight: bold; margin-bottom: 1rem; }
     .badge-active { background: #15803d; color: #fff; }
     .badge-inactive { background: #b91c1c; color: #fff; }
@@ -49,13 +49,14 @@
     .copy-btn.copied { background: #15803d; }
 
     .download-section { margin-top: 1.2rem; text-align: left; }
-    .download-btn { background: #38bdf8; color: #0f172a; margin-bottom: 0.8rem; }
-    .download-btn:hover { background: #0ea5e9; }
     .install-label { color: #94a3b8; font-size: 0.8rem; margin-bottom: 0.3rem; }
 
-    .tabs { display: flex; gap: 6px; margin-bottom: 1rem; }
+    .topbar { display: flex; gap: 6px; margin-bottom: 1rem; align-items: center; }
+    .tabs { display: flex; gap: 6px; flex: 1; }
     .tab-btn { flex: 1; background: #0f172a; color: #94a3b8; border: 1px solid #334155; padding: 0.55rem 0.3rem; font-size: 0.78rem; font-weight: normal; border-radius: 6px; }
-    .tab-btn.active { background: #334155; color: #fff; font-weight: bold; border-color: #475569; }
+    .tab-btn.active { background: #334155; color: #fb923c; font-weight: bold; border-color: #475569; }
+    .lang-btn { width: auto; flex-shrink: 0; background: #0f172a; color: #94a3b8; border: 1px solid #334155; padding: 0.55rem 0.6rem; font-size: 0.78rem; font-weight: bold; border-radius: 6px; }
+    .lang-btn:hover { background: #334155; }
     .view { display: none; }
     .view.active { display: block; }
   </style>
@@ -63,64 +64,67 @@
 <body>
 
   <div class="card">
-    <div class="tabs">
-      <button type="button" class="tab-btn active" data-view="account">Account</button>
-      <button type="button" class="tab-btn" data-view="guida">Guida</button>
-      <button type="button" class="tab-btn" data-view="download">Download</button>
+    <div class="topbar">
+      <div class="tabs">
+        <button type="button" class="tab-btn active" data-view="account" data-i18n="tab_account">Account</button>
+        <button type="button" class="tab-btn" data-view="guida" data-i18n="tab_guide">Guide</button>
+        <button type="button" class="tab-btn" id="tab-download" data-view="download" data-i18n="tab_download" style="display:none;">Download</button>
+      </div>
+      <button type="button" class="lang-btn" id="lang-btn">IT</button>
     </div>
 
     <div id="view-account" class="view active">
     <div id="auth-section">
       <h1>XSERNEX</h1>
-      <p class="subtitle">Portale Ufficiale Gestione Licenze</p>
+      <p class="subtitle" data-i18n="brand_subtitle">Official License Management Portal</p>
 
       <div id="alert" class="alert"></div>
 
-      <div class="info-note">Usa la stessa email con cui ti abboni su Ko-fi: è quella che collega il pagamento al tuo account.</div>
+      <div class="info-note" data-i18n="info_note">Use the same email you subscribe with on Ko-fi: it's the one that links your payment to your account.</div>
 
       <div class="form-group">
-        <label for="email">Email account</label>
-        <input type="email" id="email" name="email" required placeholder="tuamail@esempio.com"
+        <label for="email" data-i18n="email_label">Account email</label>
+        <input type="email" id="email" name="email" required placeholder="youremail@example.com"
                autocomplete="email" autocapitalize="none" autocorrect="off"
                spellcheck="false" inputmode="email">
       </div>
       <div class="form-group">
-        <label for="password">Password</label>
+        <label for="password" data-i18n="password_label">Password</label>
         <input type="password" id="password" required placeholder="••••••••" autocomplete="current-password">
       </div>
 
       <div class="btn-container">
-        <button type="button" id="login-btn" class="btn-login">Accedi</button>
-        <button type="button" id="register-btn" class="btn-register">Registrati</button>
+        <button type="button" id="login-btn" class="btn-login" data-i18n="login_btn">Log in</button>
+        <button type="button" id="register-btn" class="btn-register" data-i18n="register_btn">Sign up</button>
       </div>
     </div>
 
     <div id="dashboard-section" class="dashboard">
-      <h1>Area Personale</h1>
+      <h1 data-i18n="dashboard_title">My Account</h1>
       <p class="subtitle" id="user-email-display"></p>
       <div id="license-container"></div>
-      <button class="logout-btn" id="logout-btn">Esci dall'account</button>
+      <button class="logout-btn" id="logout-btn" data-i18n="logout_btn">Log out</button>
     </div>
     </div>
 
     <div id="view-guida" class="view">
-      <h1>Guida</h1>
-      <p class="subtitle">Come abbonarsi e installare Xsernex Debug</p>
+      <h1 data-i18n="guide_title">Guide</h1>
+      <p class="subtitle" data-i18n="guide_subtitle">How to subscribe and install Xsernex Debug</p>
       <div class="guide-box">
         <ol>
-          <li>Abbonati su Ko-fi (abbonamento mensile):
-            <div><a href="#" id="guida-kofi-link" target="_blank" rel="noopener" class="btn-kofi">Vai a Ko-fi</a></div>
+          <li><span data-i18n="guide_step1">Subscribe on Ko-fi (monthly membership):</span>
+            <div><a href="#" id="guida-kofi-link" target="_blank" rel="noopener" class="btn-kofi" data-i18n="guide_kofi_btn">Go to Ko-fi</a></div>
           </li>
-          <li>Usa la stessa email dell'account che hai (o crei) su questo sito: è quella che collega il pagamento alla tua licenza.</li>
-          <li>Dopo il pagamento la tua chiave comparirà da sola nella scheda <strong>Download</strong>, senza bisogno di fare nulla.</li>
-          <li>Il tool si aggiorna da solo. Se l'abbonamento scade o viene annullato, la licenza smette di funzionare finché non rinnovi.</li>
+          <li data-i18n="guide_step2">Use the same email for your Ko-fi subscription and for your account on this site: it's what links your payment to your license.</li>
+          <li data-i18n-html="guide_step3_html">After payment your key will appear automatically in the <strong>Download</strong> tab, no action needed.</li>
+          <li data-i18n="guide_step4">The tool updates itself. If your subscription expires or is cancelled, the license stops working until you renew.</li>
         </ol>
       </div>
     </div>
 
     <div id="view-download" class="view">
-      <h1>Download</h1>
-      <p class="subtitle">Installazione su Termux</p>
+      <h1 data-i18n="download_title">Download</h1>
+      <p class="subtitle" data-i18n="download_subtitle">Termux installation</p>
       <div id="download-content"></div>
     </div>
   </div>
@@ -129,13 +133,122 @@
     const SUPABASE_URL = 'https://uyouarurqcoyfaxozjrb.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_BddM4racaLDFFwVY4rmoFQ_XFg4gv0b';
     const KOFI_URL = 'https://ko-fi.com/xsernex';
-    // Passo D (ancora da definire): link di download dell'installer pubblico (loader.rb + setup.rb, nessun file protetto).
     const DOWNLOAD_BASE = 'https://xsernex.github.io';
 
     const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let currentUser = null;
-    let currentLicense = null; // { key, revoked, expired }
+    let currentLicense = null; // { key, revoked, scaduta }
+    let lastLic = null;
+    let lastError = null;
+    let dashboardLoaded = false;
+
+    // ---------- i18n ----------
+    const LANG_KEY = 'xsernex_lang';
+    let lang = (localStorage.getItem(LANG_KEY) === 'it') ? 'it' : 'en';
+
+    const I18N = {
+      en: {
+        tab_account: 'Account', tab_guide: 'Guide', tab_download: 'Download',
+        brand_subtitle: 'Official License Management Portal',
+        info_note: "Use the same email you subscribe with on Ko-fi: it's the one that links your payment to your account.",
+        email_label: 'Account email', email_placeholder: 'youremail@example.com',
+        password_label: 'Password',
+        login_btn: 'Log in', register_btn: 'Sign up',
+        dashboard_title: 'My Account', logout_btn: 'Log out',
+        guide_title: 'Guide', guide_subtitle: 'How to subscribe and install Xsernex Debug',
+        guide_step1: 'Subscribe on Ko-fi (monthly membership):',
+        guide_kofi_btn: 'Go to Ko-fi',
+        guide_step2: "Use the same email for your Ko-fi subscription and for your account on this site: it's what links your payment to your license.",
+        guide_step3_html: 'After payment your key will appear automatically in the <strong>Download</strong> tab, no action needed.',
+        guide_step4: 'The tool updates itself. If your subscription expires or is cancelled, the license stops working until you renew.',
+        download_title: 'Download', download_subtitle: 'Termux installation',
+        loading: 'Loading...',
+        fill_fields: 'Enter your email and password.',
+        invalid_email: 'Invalid email: check the domain (e.g. .com, not .co).',
+        login_error: 'Login error: ', register_error: 'Registration error: ',
+        reg_done: 'Registration complete!',
+        reg_confirm_email: 'Registration complete! Check your email to confirm your address, then log in.',
+        net_err: 'Connection failed. Check your network (or disable adblock/DNS filtering) and try again.',
+        bad_creds: 'Wrong email or password.',
+        email_not_confirmed: 'You need to confirm your email first: check your inbox (including spam).',
+        already_registered: 'This email is already registered. Use "Log in".',
+        pwd_short: 'Password too short (minimum 6 characters).',
+        bad_api_key: 'Invalid Supabase key: check the anon key.',
+        rate_limit: 'Too many attempts, try again in a few minutes.',
+        copy_btn: 'Copy', copied_btn: 'Copied!', copy_err: 'Copy failed',
+        no_license_badge: 'No Active License',
+        no_license_text: 'This account has no license yet. Check the Guide tab to learn how to subscribe.',
+        go_to_guide: 'Go to Guide', go_to_account: 'Go to Account',
+        install_label: 'Open Termux on your phone and paste this command:',
+        your_key_label: 'Your personal Termux key:',
+        expiry_label: 'Expires: ', unlimited: 'Unlimited',
+        license_revoked: 'License Revoked', license_expired: 'License Expired', license_active: 'Active License',
+        renew_note: 'Renew your Ko-fi subscription to reactivate your license:',
+        renew_btn: 'Renew on Ko-fi',
+        license_load_err: 'Could not load your license: ',
+        dl_need_login: 'You need to log in with an active subscription to see the installation command.',
+        dl_no_license: 'This account has no license yet. Subscribe on Ko-fi (see the Guide tab) to unlock the download.',
+        dl_revoked: 'Your license has been revoked: download is not available.',
+        dl_expired: 'Your license has expired: renew on Ko-fi to download the tool again.',
+        locale: 'en-US',
+      },
+      it: {
+        tab_account: 'Account', tab_guide: 'Guida', tab_download: 'Download',
+        brand_subtitle: 'Portale Ufficiale Gestione Licenze',
+        info_note: 'Usa la stessa email con cui ti abboni su Ko-fi: è quella che collega il pagamento al tuo account.',
+        email_label: 'Email account', email_placeholder: 'tuamail@esempio.com',
+        password_label: 'Password',
+        login_btn: 'Accedi', register_btn: 'Registrati',
+        dashboard_title: 'Area Personale', logout_btn: "Esci dall'account",
+        guide_title: 'Guida', guide_subtitle: 'Come abbonarsi e installare Xsernex Debug',
+        guide_step1: 'Abbonati su Ko-fi (abbonamento mensile):',
+        guide_kofi_btn: 'Vai a Ko-fi',
+        guide_step2: "Usa la stessa email dell'account che hai (o crei) su questo sito: è quella che collega il pagamento alla tua licenza.",
+        guide_step3_html: 'Dopo il pagamento la tua chiave comparirà da sola nella scheda <strong>Download</strong>, senza bisogno di fare nulla.',
+        guide_step4: "Il tool si aggiorna da solo. Se l'abbonamento scade o viene annullato, la licenza smette di funzionare finché non rinnovi.",
+        download_title: 'Download', download_subtitle: 'Installazione su Termux',
+        loading: 'Caricamento...',
+        fill_fields: 'Inserisci email e password.',
+        invalid_email: 'Email non valida: controlla il dominio (es. .com, non .co).',
+        login_error: 'Errore login: ', register_error: 'Errore registrazione: ',
+        reg_done: 'Registrazione completata!',
+        reg_confirm_email: "Registrazione completata! Controlla la posta per confermare l'email, poi accedi.",
+        net_err: 'Connessione non riuscita. Controlla la rete (o disattiva adblock/DNS filtranti) e riprova.',
+        bad_creds: 'Email o password errate.',
+        email_not_confirmed: "Devi prima confermare l'email: controlla la posta (anche spam).",
+        already_registered: 'Questa email è già registrata. Usa "Accedi".',
+        pwd_short: 'Password troppo corta (minimo 6 caratteri).',
+        bad_api_key: 'Chiave Supabase non valida: ricontrolla la anon key.',
+        rate_limit: 'Troppi tentativi, riprova tra qualche minuto.',
+        copy_btn: 'Copia', copied_btn: 'Copiato!', copy_err: 'Errore copia',
+        no_license_badge: 'Nessuna Licenza Attiva',
+        no_license_text: 'Non risulta ancora nessuna licenza su questo account. Vai nella scheda Guida per sapere come abbonarti.',
+        go_to_guide: 'Vai alla Guida', go_to_account: 'Vai su Account',
+        install_label: 'Apri Termux sul telefono e incolla questo comando:',
+        your_key_label: 'La tua chiave personale per Termux:',
+        expiry_label: 'Scadenza: ', unlimited: 'Illimitata',
+        license_revoked: 'Licenza Revocata', license_expired: 'Licenza Scaduta', license_active: 'Licenza Attiva',
+        renew_note: 'Rinnova il tuo abbonamento su Ko-fi per riattivare la licenza:',
+        renew_btn: 'Rinnova su Ko-fi',
+        license_load_err: 'Impossibile caricare la licenza: ',
+        dl_need_login: "Devi accedere al tuo account con un abbonamento attivo per vedere il comando di installazione.",
+        dl_no_license: 'Non hai ancora una licenza su questo account. Abbonati su Ko-fi (vedi la scheda Guida) per sbloccare il download.',
+        dl_revoked: 'La tua licenza è stata revocata: il download non è disponibile.',
+        dl_expired: 'La tua licenza è scaduta: rinnova su Ko-fi per tornare a scaricare il tool.',
+        locale: 'it-IT',
+      },
+    };
+
+    function t(key) { return (I18N[lang] && I18N[lang][key]) || I18N.en[key] || key; }
+
+    function applyStaticTexts() {
+      document.documentElement.lang = lang;
+      document.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = t(el.dataset.i18n); });
+      document.querySelectorAll('[data-i18n-html]').forEach((el) => { el.innerHTML = t(el.dataset.i18nHtml); });
+      emailInput.placeholder = t('email_placeholder');
+      $('lang-btn').textContent = lang === 'en' ? 'IT' : 'EN';
+    }
 
     const $ = (id) => document.getElementById(id);
     const emailInput = $('email');
@@ -143,7 +256,7 @@
     const loginBtn = $('login-btn');
     const registerBtn = $('register-btn');
 
-    // ---------- Utilità ----------
+    // ---------- Utility ----------
     function pulisciEmail(v) {
       return (v || '')
         .normalize('NFKC')
@@ -171,14 +284,13 @@
 
     function traduciErrore(err) {
       const msg = (err && err.message) || String(err);
-      if (/failed to fetch|networkerror|load failed/i.test(msg))
-        return 'Connessione non riuscita. Controlla la rete (o disattiva adblock/DNS filtranti) e riprova.';
-      if (/invalid login credentials/i.test(msg)) return 'Email o password errate.';
-      if (/email not confirmed/i.test(msg)) return 'Devi prima confermare l\'email: controlla la posta (anche spam).';
-      if (/already registered/i.test(msg)) return 'Questa email è già registrata. Usa "Accedi".';
-      if (/password should be at least/i.test(msg)) return 'Password troppo corta (minimo 6 caratteri).';
-      if (/invalid api key|apikey/i.test(msg)) return 'Chiave Supabase non valida: ricontrolla la anon key.';
-      if (/rate limit/i.test(msg)) return 'Troppi tentativi, riprova tra qualche minuto.';
+      if (/failed to fetch|networkerror|load failed/i.test(msg)) return t('net_err');
+      if (/invalid login credentials/i.test(msg)) return t('bad_creds');
+      if (/email not confirmed/i.test(msg)) return t('email_not_confirmed');
+      if (/already registered/i.test(msg)) return t('already_registered');
+      if (/password should be at least/i.test(msg)) return t('pwd_short');
+      if (/invalid api key|apikey/i.test(msg)) return t('bad_api_key');
+      if (/rate limit/i.test(msg)) return t('rate_limit');
       return msg;
     }
 
@@ -186,12 +298,12 @@
       const email = pulisciEmail(emailInput.value);
       emailInput.value = email;
       const password = passInput.value;
-      if (!email || !password) { showAlert('Inserisci email e password.'); return null; }
-      if (!emailValida(email)) { showAlert('Email non valida: controlla il dominio (es. .com, non .co).'); return null; }
+      if (!email || !password) { showAlert(t('fill_fields')); return null; }
+      if (!emailValida(email)) { showAlert(t('invalid_email')); return null; }
       return { email, password };
     }
 
-    // ---------- Copia negli appunti ----------
+    // ---------- Clipboard ----------
     async function copyText(text, btn) {
       const original = btn.textContent;
       try {
@@ -208,10 +320,10 @@
           document.execCommand('copy');
           document.body.removeChild(ta);
         }
-        btn.textContent = 'Copiato!';
+        btn.textContent = t('copied_btn');
         btn.classList.add('copied');
       } catch (e) {
-        btn.textContent = 'Errore copia';
+        btn.textContent = t('copy_err');
       }
       setTimeout(() => {
         btn.textContent = original;
@@ -230,13 +342,13 @@
         if (error) throw error;
         await loadDashboard(data.user);
       } catch (e) {
-        showAlert('Errore login: ' + traduciErrore(e));
+        showAlert(t('login_error') + traduciErrore(e));
       } finally {
         setBusy(false);
       }
     }
 
-    // ---------- Registrazione ----------
+    // ---------- Registration ----------
     async function doRegister() {
       hideAlert();
       const cred = leggiCredenziali();
@@ -246,56 +358,55 @@
         const { data, error } = await client.auth.signUp(cred);
         if (error) throw error;
 
-        // Email già esistente: Supabase restituisce utente senza identities
         if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
-          showAlert('Questa email è già registrata. Usa "Accedi".');
+          showAlert(t('already_registered'));
         } else if (data.session) {
-          showAlert('Registrazione completata!', false);
+          showAlert(t('reg_done'), false);
           await loadDashboard(data.user);
         } else {
-          showAlert('Registrazione completata! Controlla la posta per confermare l\'email, poi accedi.', false);
+          showAlert(t('reg_confirm_email'), false);
         }
       } catch (e) {
-        showAlert('Errore registrazione: ' + traduciErrore(e));
+        showAlert(t('register_error') + traduciErrore(e));
       } finally {
         setBusy(false);
       }
     }
 
-    // ---------- Guida senza licenza (versione breve: il dettaglio sta nella scheda Guida) ----------
-    function renderGuidaAbbonamento(container, userEmail) {
+    // ---------- No-license view (short: full detail lives in the Guide tab) ----------
+    function renderGuidaAbbonamento(container) {
       const wrap = document.createElement('div');
       wrap.style.cssText = 'text-align:center;margin:1rem 0;';
 
       const badge = document.createElement('span');
       badge.className = 'status-badge badge-inactive';
-      badge.textContent = 'Nessuna Licenza Attiva';
+      badge.textContent = t('no_license_badge');
       wrap.appendChild(badge);
 
       const p = document.createElement('p');
       p.style.cssText = 'color:#cbd5e1;font-size:.85rem;margin-top:.8rem;';
-      p.textContent = 'Non risulta ancora nessuna licenza su questo account. Vai nella scheda Guida per sapere come abbonarti.';
+      p.textContent = t('no_license_text');
       wrap.appendChild(p);
 
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'btn-kofi';
       btn.style.cssText = 'border:none;cursor:pointer;margin-top:0.6rem;';
-      btn.textContent = 'Vai alla Guida';
+      btn.textContent = t('go_to_guide');
       btn.addEventListener('click', () => showView('guida'));
       wrap.appendChild(btn);
 
       container.appendChild(wrap);
     }
 
-    // ---------- Sezione download / installazione ----------
+    // ---------- Download / install section ----------
     function renderDownload(container, licenseKey) {
       const section = document.createElement('div');
       section.className = 'download-section';
 
       const label = document.createElement('p');
       label.className = 'install-label';
-      label.textContent = 'Apri Termux sul telefono e incolla questo comando:';
+      label.textContent = t('install_label');
       section.appendChild(label);
 
       const installCmd = `mkdir -p ~/xsernex && cd ~/xsernex && echo "${licenseKey}" > ~/.pd_license_key && curl -L -o setup.rb ${DOWNLOAD_BASE}/setup.rb && curl -L -o setup.dat ${DOWNLOAD_BASE}/setup.dat && curl -L -o loader.dat ${DOWNLOAD_BASE}/loader.dat && curl -L -o pd_debug.dat ${DOWNLOAD_BASE}/pd_debug.dat && ruby setup.rb`;
@@ -307,7 +418,7 @@
       const copyBtn = document.createElement('button');
       copyBtn.type = 'button';
       copyBtn.className = 'copy-btn';
-      copyBtn.textContent = 'Copia';
+      copyBtn.textContent = t('copy_btn');
       copyBtn.addEventListener('click', () => copyText(installCmd, copyBtn));
       copyRow.appendChild(codeEl);
       copyRow.appendChild(copyBtn);
@@ -316,47 +427,37 @@
       container.appendChild(section);
     }
 
-    // ---------- Dashboard ----------
-    async function loadDashboard(user) {
-      currentUser = user;
-      $('auth-section').style.display = 'none';
-      $('dashboard-section').style.display = 'block';
-      $('user-email-display').textContent = user.email;
-
+    // ---------- Dashboard state -> render (re-run on language toggle too) ----------
+    function renderDashboard() {
       const container = $('license-container');
-      container.textContent = 'Caricamento...';
-
-      // Escape di % e _ per usare ilike come confronto esatto senza distinzione maiuscole
-      const emailEsatta = pulisciEmail(user.email).replace(/[\\%_]/g, '\\$&');
-
-      let licenses = null, error = null;
-      try {
-        const res = await client.from('licenses').select('*').ilike('owner_email', emailEsatta);
-        licenses = res.data; error = res.error;
-      } catch (e) { error = e; }
-
       container.textContent = '';
 
-      if (error) {
+      if (!dashboardLoaded) { container.textContent = t('loading'); return; }
+
+      if (lastError) {
         const wrap = document.createElement('div');
         wrap.style.cssText = 'text-align:center;margin:1.5rem 0;';
-        wrap.innerHTML = '<span class="status-badge badge-inactive">Nessuna Licenza Attiva</span>' +
-          '<p style="color:#cbd5e1;font-size:.9rem;margin-top:.5rem;"></p>';
-        wrap.querySelector('p').textContent = 'Impossibile caricare la licenza: ' + traduciErrore(error);
+        const badge = document.createElement('span');
+        badge.className = 'status-badge badge-inactive';
+        badge.textContent = t('no_license_badge');
+        const p = document.createElement('p');
+        p.style.cssText = 'color:#cbd5e1;font-size:.9rem;margin-top:.5rem;';
+        p.textContent = t('license_load_err') + traduciErrore(lastError);
+        wrap.append(badge, p);
         container.appendChild(wrap);
         currentLicense = null;
         renderDownloadView();
         return;
       }
 
-      if (!licenses || licenses.length === 0) {
-        renderGuidaAbbonamento(container, user.email);
+      if (!lastLic) {
+        renderGuidaAbbonamento(container);
         currentLicense = null;
         renderDownloadView();
         return;
       }
 
-      const lic = licenses[0];
+      const lic = lastLic;
       const scaduta = lic.revoked === true || (lic.expires_at && new Date(lic.expires_at) < new Date());
 
       const wrap = document.createElement('div');
@@ -364,11 +465,11 @@
 
       const badge = document.createElement('span');
       badge.className = 'status-badge ' + (scaduta ? 'badge-inactive' : 'badge-active');
-      badge.textContent = lic.revoked === true ? 'Licenza Revocata' : (scaduta ? 'Licenza Scaduta' : 'Licenza Attiva');
+      badge.textContent = lic.revoked === true ? t('license_revoked') : (scaduta ? t('license_expired') : t('license_active'));
 
       const label = document.createElement('p');
       label.style.cssText = 'color:#94a3b8;font-size:.85rem;';
-      label.textContent = 'La tua chiave personale per Termux:';
+      label.textContent = t('your_key_label');
 
       const box = document.createElement('div');
       box.className = 'license-box';
@@ -377,10 +478,10 @@
       const exp = document.createElement('p');
       exp.style.cssText = 'color:#cbd5e1;font-size:.85rem;';
       const strong = document.createElement('strong');
-      strong.textContent = 'Scadenza: ';
+      strong.textContent = t('expiry_label');
       exp.appendChild(strong);
       exp.appendChild(document.createTextNode(
-        lic.expires_at ? new Date(lic.expires_at).toLocaleDateString('it-IT') : 'Illimitata'
+        lic.expires_at ? new Date(lic.expires_at).toLocaleDateString(t('locale')) : t('unlimited')
       ));
 
       wrap.append(badge, label, box, exp);
@@ -388,7 +489,7 @@
       if (scaduta) {
         const renewNote = document.createElement('p');
         renewNote.style.cssText = 'color:#cbd5e1;font-size:.85rem;margin-top:.8rem;';
-        renewNote.textContent = 'Rinnova il tuo abbonamento su Ko-fi per riattivare la licenza:';
+        renewNote.textContent = t('renew_note');
         const kofiLink = document.createElement('a');
         kofiLink.href = KOFI_URL;
         kofiLink.target = '_blank';
@@ -396,7 +497,7 @@
         kofiLink.className = 'btn-kofi';
         kofiLink.style.display = 'block';
         kofiLink.style.marginTop = '0.5rem';
-        kofiLink.textContent = 'Rinnova su Ko-fi';
+        kofiLink.textContent = t('renew_btn');
         wrap.appendChild(renewNote);
         wrap.appendChild(kofiLink);
       }
@@ -406,7 +507,32 @@
       renderDownloadView();
     }
 
-    // ---------- Navigazione a schede ----------
+    // ---------- Dashboard fetch ----------
+    async function loadDashboard(user) {
+      currentUser = user;
+      $('auth-section').style.display = 'none';
+      $('dashboard-section').style.display = 'block';
+      $('user-email-display').textContent = user.email;
+      $('tab-download').style.display = '';
+
+      dashboardLoaded = false;
+      renderDashboard();
+
+      const emailEsatta = pulisciEmail(user.email).replace(/[\\%_]/g, '\\$&');
+
+      let licenses = null, error = null;
+      try {
+        const res = await client.from('licenses').select('*').ilike('owner_email', emailEsatta);
+        licenses = res.data; error = res.error;
+      } catch (e) { error = e; }
+
+      dashboardLoaded = true;
+      lastError = error || null;
+      lastLic = (!error && licenses && licenses.length > 0) ? licenses[0] : null;
+      renderDashboard();
+    }
+
+    // ---------- Tab navigation ----------
     function showView(name) {
       ['account', 'guida', 'download'].forEach((v) => {
         $('view-' + v).classList.toggle('active', v === name);
@@ -417,8 +543,7 @@
       if (name === 'download') renderDownloadView();
     }
 
-    // Download: visibile SOLO se sei loggato e hai una licenza attiva (non scaduta, non revocata).
-    // In ogni altro caso non compare nessun comando, solo un messaggio.
+    // Download tab only shows a real command when logged in with an active license.
     function renderDownloadView() {
       const c = $('download-content');
       c.textContent = '';
@@ -431,18 +556,16 @@
 
       const p = document.createElement('p');
       p.style.cssText = 'color:#cbd5e1;font-size:.9rem;margin-bottom:1rem;';
-      let btnLabel = 'Vai su Account';
+      let btnLabel = t('go_to_account');
       let btnView = 'account';
       if (!currentUser) {
-        p.textContent = 'Devi accedere al tuo account con un abbonamento attivo per vedere il comando di installazione.';
+        p.textContent = t('dl_need_login');
       } else if (!currentLicense) {
-        p.textContent = 'Non hai ancora una licenza su questo account. Abbonati su Ko-fi (vedi la scheda Guida) per sbloccare il download.';
-        btnLabel = 'Vai alla Guida';
+        p.textContent = t('dl_no_license');
+        btnLabel = t('go_to_guide');
         btnView = 'guida';
       } else {
-        p.textContent = currentLicense.revoked
-          ? 'La tua licenza è stata revocata: il download non è disponibile.'
-          : 'La tua licenza è scaduta: rinnova su Ko-fi per tornare a scaricare il tool.';
+        p.textContent = currentLicense.revoked ? t('dl_revoked') : t('dl_expired');
       }
       const btn = document.createElement('button');
       btn.type = 'button';
@@ -457,11 +580,23 @@
     });
     $('guida-kofi-link').href = KOFI_URL;
 
+    // ---------- Language toggle ----------
+    $('lang-btn').addEventListener('click', () => {
+      lang = lang === 'en' ? 'it' : 'en';
+      localStorage.setItem(LANG_KEY, lang);
+      applyStaticTexts();
+      if (currentUser) renderDashboard(); else renderDownloadView();
+    });
+
     // ---------- Logout ----------
     $('logout-btn').addEventListener('click', async () => {
       try { await client.auth.signOut(); } catch (e) {}
       currentUser = null;
       currentLicense = null;
+      lastLic = null;
+      lastError = null;
+      dashboardLoaded = false;
+      $('tab-download').style.display = 'none';
       $('dashboard-section').style.display = 'none';
       $('auth-section').style.display = 'block';
       emailInput.value = '';
@@ -474,12 +609,15 @@
     registerBtn.addEventListener('click', doRegister);
     passInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') doLogin(); });
 
-    // Sessione già attiva
+    applyStaticTexts();
+    renderDownloadView();
+
+    // Existing session
     (async () => {
       try {
         const { data: { user } } = await client.auth.getUser();
         if (user) loadDashboard(user);
-      } catch (e) { /* nessuna sessione */ }
+      } catch (e) { /* no session */ }
     })();
   </script>
 </body>
