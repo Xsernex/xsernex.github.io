@@ -133,7 +133,6 @@
     const SUPABASE_URL = 'https://uyouarurqcoyfaxozjrb.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_BddM4racaLDFFwVY4rmoFQ_XFg4gv0b';
     const KOFI_URL = 'https://ko-fi.com/xsernex';
-    const DOWNLOAD_BASE = 'https://xsernex.github.io';
 
     const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -181,6 +180,7 @@
         no_license_text: 'This account has no license yet. Check the Guide tab to learn how to subscribe.',
         go_to_guide: 'Go to Guide', go_to_account: 'Go to Account',
         install_label: 'Open Termux on your phone and paste this command:',
+        link_expiry_note: 'This command contains temporary download links valid for 30 minutes. If it stops working, come back to this page to generate a new one.',
         your_key_label: 'Your personal Termux key:',
         expiry_label: 'Expires: ', unlimited: 'Unlimited',
         license_revoked: 'License Revoked', license_expired: 'License Expired', license_active: 'Active License',
@@ -226,6 +226,7 @@
         no_license_text: 'Non risulta ancora nessuna licenza su questo account. Vai nella scheda Guida per sapere come abbonarti.',
         go_to_guide: 'Vai alla Guida', go_to_account: 'Vai su Account',
         install_label: 'Apri Termux sul telefono e incolla questo comando:',
+        link_expiry_note: 'Questo comando contiene link di download temporanei, validi 30 minuti. Se smette di funzionare, torna su questa pagina per generarne uno nuovo.',
         your_key_label: 'La tua chiave personale per Termux:',
         expiry_label: 'Scadenza: ', unlimited: 'Illimitata',
         license_revoked: 'Licenza Revocata', license_expired: 'Licenza Scaduta', license_active: 'Licenza Attiva',
@@ -400,7 +401,9 @@
     }
 
     // ---------- Download / install section ----------
-    function renderDownload(container, licenseKey) {
+    // Builds the install command using short-lived signed links from Supabase Storage
+    // (get_download_links RPC), instead of fixed public GitHub Pages URLs.
+    async function renderDownload(container, licenseKey) {
       const section = document.createElement('div');
       section.className = 'download-section';
 
@@ -409,7 +412,35 @@
       label.textContent = t('install_label');
       section.appendChild(label);
 
-      const installCmd = `mkdir -p ~/xsernex && cd ~/xsernex && echo "${licenseKey}" > ~/.pd_license_key && curl -L -o setup.rb ${DOWNLOAD_BASE}/setup.rb && curl -L -o setup.dat ${DOWNLOAD_BASE}/setup.dat && curl -L -o loader.dat ${DOWNLOAD_BASE}/loader.dat && curl -L -o pd_debug.dat ${DOWNLOAD_BASE}/pd_debug.dat && ruby setup.rb`;
+      const loadingP = document.createElement('p');
+      loadingP.style.cssText = 'color:#94a3b8;font-size:.85rem;';
+      loadingP.textContent = t('loading');
+      section.appendChild(loadingP);
+      container.appendChild(section);
+
+      let links = null, linkErr = null;
+      try {
+        const res = await client.rpc('get_download_links', { p_key: licenseKey });
+        if (res.error) throw res.error;
+        links = res.data;
+      } catch (e) { linkErr = e; }
+
+      loadingP.remove();
+
+      if (linkErr || !links || links.ok !== true) {
+        const errP = document.createElement('p');
+        errP.style.cssText = 'color:#f87171;font-size:.85rem;';
+        errP.textContent = t('license_load_err') + (links && links.reason ? links.reason : (linkErr ? linkErr.message : ''));
+        section.appendChild(errP);
+        return;
+      }
+
+      const installCmd = `mkdir -p ~/xsernex && cd ~/xsernex && echo "${licenseKey}" > ~/.pd_license_key && curl -L -o setup.rb "${links.bootstrap_download_url}" && curl -L -o setup.dat "${links.setup_download_url}" && curl -L -o loader.dat "${links.loader_download_url}" && curl -L -o pd_debug.dat "${links.pd_debug_download_url}" && ruby setup.rb`;
+
+      const note = document.createElement('p');
+      note.style.cssText = 'color:#94a3b8;font-size:.78rem;margin-bottom:.4rem;';
+      note.textContent = t('link_expiry_note');
+      section.appendChild(note);
 
       const copyRow = document.createElement('div');
       copyRow.className = 'copy-row';
@@ -423,8 +454,6 @@
       copyRow.appendChild(codeEl);
       copyRow.appendChild(copyBtn);
       section.appendChild(copyRow);
-
-      container.appendChild(section);
     }
 
     // ---------- Dashboard state -> render (re-run on language toggle too) ----------
